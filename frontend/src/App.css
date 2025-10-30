@@ -1,0 +1,11 @@
+.parent {
+  display: grid;
+  grid-template:
+    "header header" auto
+    "sidebar main" 1fr / 250px 1fr;
+  height: 100vh;
+}
+
+.header { grid-area: header; background: #ddd; padding: 1rem; }
+.sidebar { grid-area: sidebar; background: #f2f2f2; padding: 1rem; }
+.main-content { grid-area: main; background: #fff; padding: 1rem; }
