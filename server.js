@@ -1,4 +1,5 @@
 require('dotenv').config();   
+const cors = require("cors")
 
 const express = require('express');
 const app = express();
@@ -9,6 +10,11 @@ const  sequelize  = require("./db");
 
 app.use(express.json());
 app.use(jsonErrorHandler);
+
+app.use(cors({
+  origin: "*",
+}));
+
 
 require("./models/userModel");
 require("./models/staffModel");
