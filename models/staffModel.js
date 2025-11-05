@@ -1,7 +1,7 @@
 const sequelize = require("../db");
 const { DataTypes } = require("sequelize");
 const { Position } = require("../models/positionModel");
-const { User } = require("../models/userModel");
+const { User } = require("../modules/users/user.model");
 
 
 const Staff = sequelize.define(

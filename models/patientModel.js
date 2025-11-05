@@ -1,6 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../db");
-const { User } = require("./userModel");
+const { User } = require("../modules/users/user.model");
 
 const Patient = sequelize.define(
   "Patient",

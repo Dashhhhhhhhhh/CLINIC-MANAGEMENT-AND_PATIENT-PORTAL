@@ -35,7 +35,7 @@ const User = sequelize.define(
     },
     gender: {
       type: DataTypes.ENUM("male", "female"),
-      allowedNull: true,
+      allowNull: true,
     },
     active: {
       type: DataTypes.BOOLEAN,

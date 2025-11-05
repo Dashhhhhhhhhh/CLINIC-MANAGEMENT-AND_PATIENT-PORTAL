@@ -16,7 +16,7 @@ app.use(cors({
 }));
 
 
-require("./models/userModel");
+require("./modules/users/user.model");
 require("./models/staffModel");
 require("./models/doctorModel");
 require("./models/adminModel");
@@ -33,8 +33,8 @@ require("./models/xrayModel");
 require("./models/ultrasoundModel");
 
 
-const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/users');
+const userRoutes = require("./modules/users/user.routes");
+const authRoutes = require("./modules/users/auth.routes");
 const staffRoutes = require('./routes/staff');
 const doctorRoutes = require('./routes/doctor');
 const adminRoutes = require('./routes/admin');

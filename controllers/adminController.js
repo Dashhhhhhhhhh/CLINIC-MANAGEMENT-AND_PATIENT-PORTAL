@@ -1,7 +1,7 @@
 const { isValidUUID } = require("../utils/security");
 const { Admin, createAdmin, getAllAdmins, getAdminById, updateAdmin, toggleAdminStatus } = require("../models/adminModel");
 const { Role } = require("../models/roleModel");
-const { User } = require("../models/userModel");
+const { User } = require("../modules/users/user.model");
 
 async function createAdminController(req, res) {
   try {

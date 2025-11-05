@@ -4,7 +4,6 @@ const { User } = require('./user.model');
 const { Op } = require('sequelize');
 const { isValidUUID } = require("../../utils/security");
 
-
 async function registerAuthService(email, username, password, role_id, gender) {
 
         if (!email || !username || !password || !role_id || !gender) {
@@ -119,7 +118,15 @@ async function getAllUsersService (active, role_id) {
             "email",
             "username",
             "gender",
-            "active"
+            "active",
+            "created_at"
+        ],
+        include: [
+            {
+                model: Role,
+                as: "role",
+                attributes: ["role_id", "role_name"]
+            }
         ]
     });
 

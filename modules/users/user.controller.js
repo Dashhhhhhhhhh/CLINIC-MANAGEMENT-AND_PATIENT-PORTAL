@@ -1,21 +1,19 @@
 const { getAllUsersService, getUsersByIdService, updateUsersService, toggleUserStatusService } = require('./user.service');
 
 async function getAllUsersController(req, res) {
-    try {
+  try {
 
-        const result = await getAllUsersService();
-        
-        return res.status(200).json({
-            success: true,
-            User: result
-        });
+    const result = await getAllUsersService();
 
-    } catch (error) {
-        return res.status(error.status || 500).json({
-            success: false,
-            message: "Internal server error"
-        });
-    }
+    return res.status(200).json({
+      success: true,
+      users: result
+    });
+
+  } catch (error) {
+    console.error("❌ Error in getAllUsersController:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
 }
 
 async function getUsersIdController(req, res) {

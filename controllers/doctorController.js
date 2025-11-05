@@ -1,6 +1,6 @@
 const { isValidUUID } = require("../utils/security");
 const { Doctor, createDoctor, getAllDoctors, getDoctorById, updateDoctor, toggleDoctorStatus } = require("../models/doctorModel");
-const { User } = require("../models/userModel");
+const { User } = require("../modules/users/user.model");
 const { Specialization } = require("../models/specializationModel");
 
 

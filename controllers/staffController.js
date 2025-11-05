@@ -1,6 +1,6 @@
 const { isValidUUID } = require("../utils/security");
 const { Staff, createStaff, getAllStaff, getStaffById, updateStaff, toggleStaffStatus } = require("../models/staffModel");
-const { User } = require("../models/userModel");
+const { User } = require("../modules/users/user.model");
 const { Position } = require("../models/positionModel");
 
 async function registerStaffController(req, res) {
