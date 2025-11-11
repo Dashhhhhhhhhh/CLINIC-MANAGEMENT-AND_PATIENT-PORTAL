@@ -1,17 +1,14 @@
-const { getAllUsersService, getUsersByIdService, updateUsersService, toggleUserStatusService } = require('./user.service');
+const { getAllUsersService, getUsersByIdService, updateUsersService, toggleUserStatusService, getAvailableUsersService } = require('./user.service');
 
 async function getAllUsersController(req, res) {
   try {
 
     const result = await getAllUsersService();
 
-    return res.status(200).json({
-      success: true,
-      users: result
-    });
+    return res.status(200).json(result);
 
   } catch (error) {
-    console.error("❌ Error in getAllUsersController:", error);
+    console.error("Error in getAllUsersController:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 }
@@ -75,15 +72,10 @@ async function toggleUserStatusController(req, res) {
 
     const result = await toggleUserStatusService(id ,active);
 
-        if (!result.success) {
-            return res.status(400).json(result);
-        }     
+        if (!result.success) return res.status(400).json(result);
+    
+        return res.status(200).json(result);
 
-        return res.status(200).json({ 
-            success: true,
-            message: result.message,
-            data: result.data
-         });
 
     } catch (error) {
         return res.status(error.status || 500).json({
@@ -93,9 +85,26 @@ async function toggleUserStatusController(req, res) {
     }
 }
 
+async function getAvailableController(req, res) {
+  try {
+
+    const result = await getAvailableUsersService();
+
+    if (!result.success) return res.status(400).json(result);
+
+    return res.status(200).json(result);
+
+
+  } catch (error) {
+    console.error("Error in getAvailableController:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+}
+
 module.exports = {
   getAllUsersController,
   getUsersIdController,
   updateUsersController,
   toggleUserStatusController,
+  getAvailableController
 };

@@ -1,9 +1,9 @@
-import axios from "./axios";
+import api from "./axios";
 
 export async function getAllUsers() {
   try {
-        const response = await axios.get("/users");
-        console.log(response.data);
+        const response = await api.get("/users");
+        console.log("Error fetching users:", response.data);
     return response.data; 
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -13,8 +13,8 @@ export async function getAllUsers() {
 
 export async function getUsersById(id) {
     try {
-        const response = await axios.get(`/users/${id}`);
-        console.log(response.data);
+        const response = await api.get(`/users/${id}`);
+        console.log("Fetched users:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -24,7 +24,7 @@ export async function getUsersById(id) {
 
 export async function updateUser(id, updatedData) {
     try {
-        const response = await axios.patch(`/users/${id}`, updatedData);
+        const response = await api.patch(`/users/${id}`, updatedData);
         console.log("User updated:", response.data);
         return response.data;
   } catch (error) {
@@ -35,7 +35,7 @@ export async function updateUser(id, updatedData) {
 
 export async function toggleActiveUser(id, newStatus) {
     try {
-        const response = await axios.patch(`/users/${id}/status`, { active: newStatus });
+        const response = await api.patch(`/users/${id}/status`, { active: newStatus });
         console.log("Status updated:", response.data);
         return response.data;
   } catch (error) {

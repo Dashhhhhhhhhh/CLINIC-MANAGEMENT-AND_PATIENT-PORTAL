@@ -1,8 +1,8 @@
-const sequelize = require("../db");
+const sequelize = require("../../db");
 const { DataTypes } = require("sequelize");
-const { Role } = require("./roleModel");
-const { User } = require("../modules/users/user.model");
-const { Specialization } = require("./specializationModel");
+const { Role } = require("../../models/roleModel");
+const { User } = require("../users/user.model");
+const { Specialization } = require("../specialization/specialization.model");
 
 const Doctor = sequelize.define(
   "Doctor",

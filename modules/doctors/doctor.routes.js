@@ -8,13 +8,13 @@ const {
     getDoctorByIdController,
     toggleDoctorStatusController
 
-} = require('../controllers/doctorController');
+} = require('./doctor.controller');
 
 router.post('/', registerDoctorController);
 router.get('/', getAllDoctorController);
 
 
-router.get('/:id', getDoctorByIdController);
+router.get('/:doctor_id', getDoctorByIdController);
 router.patch('/:id', updateDoctorsController);
 
 router.patch('/:id/status', toggleDoctorStatusController);

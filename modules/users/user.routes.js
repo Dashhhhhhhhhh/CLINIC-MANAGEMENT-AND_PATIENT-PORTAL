@@ -6,15 +6,19 @@ const {
   getAllUsersController,  
   getUsersIdController, 
   updateUsersController, 
-  toggleUserStatusController 
+  toggleUserStatusController,
+  getAvailableController
 } = require('./user.controller');
 
 router.get('/', getAllUsersController);
+
+router.get('/available', getAvailableController);
 
 router.get('/:id', getUsersIdController);
 
 router.patch('/:id', updateUsersController);
 
 router.patch('/:id/status', toggleUserStatusController);
+
 
 module.exports = router;

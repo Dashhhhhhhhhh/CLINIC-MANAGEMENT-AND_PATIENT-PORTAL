@@ -1,7 +1,7 @@
 // models/associationModel.js
 
-const { Doctor } = require("./doctorModel");
-const { Specialization } = require("./specializationModel");
+const { Doctor } = require("../modules/doctors/doctor.model");
+const { Specialization } = require("../modules/specialization/specialization.model");
 const { Admin } = require("./adminModel");
 const { Patient } = require("./patientModel");
 const { Position } = require("./positionModel");

@@ -18,10 +18,10 @@ app.use(cors({
 
 require("./modules/users/user.model");
 require("./models/staffModel");
-require("./models/doctorModel");
+require("./modules/doctors/doctor.model");
 require("./models/adminModel");
 require("./models/patientModel");
-require("./models/specializationModel");
+require("./modules/specialization/specialization.model");
 require("./models/positionModel");
 require("./models/roleModel");
 require("./models/associationModel");
@@ -36,10 +36,10 @@ require("./models/ultrasoundModel");
 const userRoutes = require("./modules/users/user.routes");
 const authRoutes = require("./modules/users/auth.routes");
 const staffRoutes = require('./routes/staff');
-const doctorRoutes = require('./routes/doctor');
+const doctorRoutes = require("./modules/doctors/doctor.routes");
 const adminRoutes = require('./routes/admin');
 const patientRoutes = require('./routes/patient');
-const specializationRoutes = require('./routes/specialization');
+const specializationRoutes = require('./modules/specialization/specialization.routes');
 const positionRoutes = require('./routes/position');
 const rolesRoutes = require('./routes/roles');
 const hematologyRoutes = require("./routes/hematologyResult");

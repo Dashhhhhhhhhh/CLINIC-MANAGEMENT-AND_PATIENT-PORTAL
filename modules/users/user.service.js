@@ -3,11 +3,12 @@ const { Role } = require('../../models/roleModel');
 const { User } = require('./user.model');
 const { Op } = require('sequelize');
 const { isValidUUID } = require("../../utils/security");
+const { Doctor } = require('../doctors/doctor.model');
 
 async function registerAuthService(email, username, password, role_id, gender) {
 
         if (!email || !username || !password || !role_id || !gender) {
-            return { success: false, error: "All fields are required." };
+            return { success: false, message: "All fields are required." };
         }
 
         
@@ -15,18 +16,18 @@ async function registerAuthService(email, username, password, role_id, gender) {
         if (!passwordRegex.test(password)) {
             return {
                 success: false,
-                error: "Password must be at least 8 characters and include uppercase, lowercase, number, and special character."
+                message: "Password must be at least 8 characters and include uppercase, lowercase, number, and special character."
             };
         }
 
         const role = await Role.findByPk(role_id);
         if (!role) {
-            return { success: false, error: "Invalid role ID. Role does not exist."};
+            return { success: false, message: "Invalid role ID. Role does not exist."};
         }
        
         const validGenders = ["male", "female"];
         if (gender && !validGenders.includes(gender.toLowerCase())) {
-            return { success: false, error: "Invalid gender" };
+            return { success: false, message: "Invalid gender" };
         }
 
         const cleanedEmail = email.trim().toLowerCase();
@@ -45,8 +46,8 @@ async function registerAuthService(email, username, password, role_id, gender) {
             }
         });
 
-        if (existingUser.email === cleanedEmail) return { success: false, error: "Email already exists" };
-        if (existingUser.username === cleanedUsername) return { success: false, error: "Username already exists" };
+        if (existingUser.email === cleanedEmail) return { success: false, message: "Email already exists" };
+        if (existingUser.username === cleanedUsername) return { success: false, message: "Username already exists" };
 
 
         const user = await User.create({
@@ -73,7 +74,7 @@ async function registerAuthService(email, username, password, role_id, gender) {
 
 async function loginAuthService(username, password) {
 
-    if (!username || !password) return {success: false, error: "Username and password are required."} ;
+    if (!username || !password) return {success: false, message: "Username and password are required."} ;
 
     const cleanedUsername = username.trim().toLowerCase();
 
@@ -82,16 +83,16 @@ async function loginAuthService(username, password) {
         });
 
         if (!user) {
-            return { success: false, error: "User not found." };
+            return { success: false, message: "User not found." };
         }
 
         if (!user.active) {
-            return { success: false, error: "User account is inactive." };
+            return { success: false, message: "User account is inactive." };
         }
 
         const validPassword = await comparePassword(password, user.password_hash);
         if (!validPassword) {
-            return { success: false, error: "Invalid username or password." };
+            return { success: false, message: "Invalid username or password." };
         }
 
         const token = generateToken({ id: user.id, role: user.role_id });
@@ -111,8 +112,13 @@ async function loginAuthService(username, password) {
 }
 
 async function getAllUsersService (active, role_id) {
-    
+    const whereClause = {};
+
+    if (active !== undefined) whereClause.active = active;
+    if (role_id !== undefined) whereClause.role_id =role_id;
+
     const result = await User.findAll({
+        where: whereClause,
         attributes: [
             "id",
             "email",
@@ -130,14 +136,18 @@ async function getAllUsersService (active, role_id) {
         ]
     });
 
-    return result;
+    return {
+        success: true,
+        count: result.length,
+        users: result.map(user => user.get({ plain: true}))
+    };
 
 }
 
 async function getUsersByIdService (id) {
         
         if (!isValidUUID(id)) {
-            return { success: false, error: "Invalid id" };
+            return { success: false, message: "Invalid id" };
         }
 
         const user = await User.findByPk(id, {
@@ -153,14 +163,16 @@ async function getUsersByIdService (id) {
          delete cleanUser.password_hash;
 
 
-        return { success: true, cleanUser };
-
+        return { 
+            success: true,
+            user: cleanUser.get({ plain: true }) 
+        };
 }
 
 async function updateUsersService (id, updateField)  {
 
         if (!isValidUUID(id)) {
-            return { success: false, error: "Invalid id" };
+            return { success: false, message: "Invalid user's id.1" };
         }
 
         const existingUser = await User.findOne({ where: {id: id} });
@@ -198,18 +210,18 @@ async function updateUsersService (id, updateField)  {
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-        if (update.email && !emailRegex.test(update.email)) return { success: false, error: "Invalid email format." };
+        if (update.email && !emailRegex.test(update.email)) return { success: false, message: "Invalid email format." };
 
-        if (update.username && update.username.length < 3) return { success: false, error: "Username must be at least 3 characters." };
+        if (update.username && update.username.length < 3) return { success: false, message: "Username must be at least 3 characters." };
 
         const validGenders = ["male", "female"];
-        if (update.gender && !validGenders.includes(update.gender)) return { success: false, error: "Invalid gender value." }; 
+        if (update.gender && !validGenders.includes(update.gender)) return { success: false, message: "Invalid gender value." }; 
     
         if (update.role_id) {
             const roleId = await Role.findOne({ where: { role_id: update.role_id} });
-                if(!roleId) return { success: false, error: "Role not found." };
+                if(!roleId) return { success: false, message: "Role not found." };
         }
-        if (Object.keys(update).length === 0) return { success: false, message: "No fields provided to update" };
+        if (!update || Object.keys(update).length === 0) return { success: false, message: "No fields provided to update" };
         
         const updateUser = await User.update(update, {
             where: { id: id }
@@ -220,13 +232,13 @@ async function updateUsersService (id, updateField)  {
         return {
             success: true,
             message: "User updated Succesfully",
-            updateUser: refreshedUser
+            updateUser: refreshedUser.get({ plain: true })
         };
 }
 
 async function toggleUserStatusService (id, active) {
 
-        if (!isValidUUID(id)) return ({ success: false, error: "Invalid user id." });
+        if (!isValidUUID(id)) return ({ success: false, message: "Invalid user id." });
         
         const user = await User.findOne({ where: { id: id } });
 
@@ -256,11 +268,28 @@ async function toggleUserStatusService (id, active) {
     };
 }
 
+async function getAvailableUsersService() {
+    const assignedUserIds = await Doctor.findAll({ attributes: ['user_id'] });
+
+    const userIds = assignedUserIds.map(doc => doc.user_id);
+
+    const availableUsers = await User.findAll({
+        where: {
+            id: { [Op.notIn]: userIds }
+        }
+    });
+
+    return {
+        success: true,
+        users: availableUsers
+    };
+}
 module.exports = {
     registerAuthService,
     loginAuthService,
     getAllUsersService,
     getUsersByIdService,
     updateUsersService,
-    toggleUserStatusService
+    toggleUserStatusService,
+    getAvailableUsersService
 };

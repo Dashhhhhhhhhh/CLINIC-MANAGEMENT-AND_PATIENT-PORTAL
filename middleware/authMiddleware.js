@@ -15,7 +15,7 @@ function authenticateJWT(req, res, next) {
     }
 
     req.user = user;
-
+    
     next();
   });
 }

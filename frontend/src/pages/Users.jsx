@@ -7,13 +7,14 @@ function Users () {
     const [error, setError] = useState(null);
     const [userId, setUserId] = useState("");
     const [selectedUser, setSelectedUser] = useState(null);
-
     const [successMessage, setSuccessMessage] = useState("");
+
     useEffect(() => {
         const fetchUsers = async() => {
         setLoading(true);
         setSuccessMessage("");
-        setError(null);            try {
+        setError(null);           
+        try {
                 const result = await getAllUsers();
                 setUsers(result.users);
             } catch (error) {
@@ -124,7 +125,7 @@ function Users () {
         setSuccessMessage("");
         setError(null);
 
-        const newStatus = !selectedUser.active
+        const newStatus = !selectedUser.active;
         try {
             const result = await toggleActiveUser(selectedUser.id, !selectedUser.active);
 
@@ -213,24 +214,28 @@ function Users () {
                         <h4>Edit User</h4>
                         <p>Username</p>
                         <input
+                        type="text"
                         placeholder="Enter username"
                         value={editUser.username}
                         onChange={(e) => setEditUser({ ...editUser, username: e.target.value })}
                         />
                         <p>Email</p>
                         <input
+                        type="text"
                         placeholder="Enter email"
                         value={editUser.email}
                         onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
                         />
                         <p>Role</p>
                         <input
+                        type="text"
                         placeholder="Enter role"
                         value={editUser.role?.role_name || ""}
                         onChange={(e) => setEditUser({ ...editUser, role: e.target.value })}
                         />
                         <p>Gender</p>
                         <input
+                        type="text"
                         placeholder="Enter gender"
                         value={editUser.gender}
                         onChange={(e) => setEditUser({ ...editUser, gender: e.target.value })}
@@ -239,12 +244,10 @@ function Users () {
 
                         <button onClick={handleToggleActive}>Toggle Active</button>
                         {successMessage && <p>{successMessage}</p>}
-
-
                     </div>
                     )}
                 </div>
-)}
+                )}
             </div>
         </div>
     )  
