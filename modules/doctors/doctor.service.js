@@ -6,15 +6,15 @@ const { Result } = require("pg");
 
 async function registerDoctorService(user_id, first_name, middle_initial, last_name, license_number, contact_number, specialization_id, active) {
 
-    if(!user_id || !first_name || !middle_initial || !last_name || !license_number || !contact_number || !specialization_id ) {
+    if(!user_id || !first_name || !last_name || !license_number || !specialization_id ) {
         return { success: false, message: "Please provide all required fields (user_id, first_name, last_name, license_number, specialization_id)." };
     }
 
     if (!isValidUUID(user_id)) {
-        return { success: false, message: "Invalid user_id format." };
+        return { success: false, message: "Invalid user id format." };
     }
     if (!isValidUUID(specialization_id)) {
-        return { success: false, message: "Invalid specialization_id format." };
+        return { success: false, message: "Invalid specialization id format." };
     }
 
     if (first_name.length < 2 || first_name.length > 50) {
@@ -168,7 +168,7 @@ async function getDoctorByIdService(doctor_id) {
 
 async function updateDoctorService(doctor_id, updateField) {
 
-    if (!isValidUUID(doctor_id)) return { success: false, message: "Error invalid doctor's ID. "}
+    if (!isValidUUID(doctor_id)) return { success: false, message: "Error invalid doctor's ID. "};
 
     const existingDoctor = await Doctor.findOne({ where: { doctor_id: doctor_id } });
 

@@ -6,12 +6,14 @@ const {
     getAllPositionsController,
     getPositionByIdController,
     updatePositionController,
-    togglePositionStatusController
-} = require('../controllers/positionController');
+    togglePositionStatusController,
+    getAvailablePositionController
+} = require('./position.controller');
 
-router.post('/', createPositionController);
+router.post('/', createPositionController)
 
 router.get('/', getAllPositionsController);
+router.get('/available', getAvailablePositionController);
 router.get('/:id', getPositionByIdController);
 
 

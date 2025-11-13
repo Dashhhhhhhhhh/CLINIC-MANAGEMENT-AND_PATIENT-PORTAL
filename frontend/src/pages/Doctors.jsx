@@ -107,7 +107,7 @@ function Doctors() {
       console.log("Final payload being sent:", payload);
 
       const result = await createDoctor(payload);
-      console.log("✅ Finished API call, proceeding...");
+      console.log(" Finished API call, proceeding...");
       resetForm();
 
       setSuccessMessage("Doctor added successfully!");
@@ -466,7 +466,7 @@ function Doctors() {
             ))}
           </select>
 
-          <button onClick={handleAddDoctor}>Create</button>
+          <button onClick={handleAddDoctor}>Submit</button>
 
           {successMessage && <p>{successMessage}</p>}
         </form>
@@ -485,7 +485,7 @@ function Doctors() {
         <button onClick={fetchDoctorById}>Search</button>
     
         {selectedDoctor && (
-            <div>
+            <div> 
                 <p>doctor_id: {selectedDoctor.doctor_id}</p>
                 <p>first_name: {selectedDoctor.first_name}</p>
                 <p>middle_initial: {selectedDoctor.middle_initial}</p>
@@ -518,7 +518,7 @@ function Doctors() {
                         <input
                         type="text"
                         placeholder="Enter Middle Initial"
-                        value={editDoctor.middle_initial}
+                        value={editDoctor.middle_initial || ""}
                         onChange={(e) => setEditDoctor({ ...editDoctor, middle_initial: e.target.value })}
                         />
                    <p>Last Name</p>
@@ -532,12 +532,12 @@ function Doctors() {
                         <input
                         type="text"
                         placeholder="Enter Contact Number"
-                        value={editDoctor.contact_number}
+                        value={editDoctor.contact_number || ""}
                         onChange={(e) => setEditUser({ ...editDoctor, contact_number: e.target.value })}
                         /> 
                    <p>Specialization</p>
                         <select
-                            value={selectedSpecialization}
+                            value={editDoctor.doctor_id || ""}
                             onChange={(e) =>
                                 setEditDoctor({ ...editDoctor, specialization_id: e.target.value })
                             }

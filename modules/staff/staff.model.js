@@ -1,7 +1,7 @@
-const sequelize = require("../db");
+const sequelize = require("../../db");
 const { DataTypes } = require("sequelize");
-const { Position } = require("../models/positionModel");
-const { User } = require("../modules/users/user.model");
+const { Position } = require("../positions/position.model");
+const { User } = require("../users/user.model");
 
 
 const Staff = sequelize.define(
@@ -14,7 +14,7 @@ const Staff = sequelize.define(
     },
     user_id: {
       type: DataTypes.UUID,
-      allowNull: true,
+      allowNull: false,
     },
     first_name: {
       type: DataTypes.STRING(50),

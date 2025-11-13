@@ -306,7 +306,7 @@ async function updatePatientController (req, res) {
     }
 
         const allowedFields = [
-            'first_name', 'middle_initial', 'last_name', 'birthdate', 'gender_id',
+            'first_name', 'middle_initial', 'last_name', 'birthdate', 'gender',
             'building_number', 'street_name', 'barangay_subdivision', 'city_municipality',
             'province', 'postal_code', 'country', 'contact_number', 'medical_history'
         ];

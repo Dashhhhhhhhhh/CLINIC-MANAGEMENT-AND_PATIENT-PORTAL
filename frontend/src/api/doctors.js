@@ -3,7 +3,7 @@ import api from "./axios";
 export async function createDoctor (payload) {
     try {
         const response = await api.post("/doctors", payload);
-        console.log("Doctor registered:", response.data)
+        console.log("Doctor registered:", response.data);
         return response.data;
   } catch (error) {
     console.error("Error creating doctor:", error);
@@ -14,7 +14,7 @@ export async function createDoctor (payload) {
 export async function getAllDoctors() {
     try {
         const response = await api.get("/doctors");
-        console.log("Fetched doctors:", response.data)
+        console.log("Fetched doctors:", response.data);
         return response.data;
   } catch (error) {
     console.error("Error fetching doctors", error);
@@ -36,7 +36,7 @@ export async function getDoctorsById(doctorId) {
 export async function updateDoctor(doctor_id, updatedData) {
     try {
         const response  = await api.patch(`/doctors/${doctor_id}`, updatedData);
-        console.log("Doctor updated:", response.data) 
+        console.log("Doctor updated:", response.data);
         return response.data;
   } catch (error) {
     console.error("Error updating doctor:", error);
@@ -57,7 +57,6 @@ export async function toggleActiveDoctor(doctor_id, newStatus){
 
 export async function getAvailableUsers() {
     try {
-
         const response = await api.get("/users/available");
         return response.data;
       } catch (error) {

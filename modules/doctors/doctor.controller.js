@@ -16,6 +16,7 @@ async function registerDoctorController(req, res) {
     } = req.body;
 
 
+
     const result = await registerDoctorService(
       user_id,
       first_name,
@@ -68,7 +69,7 @@ async function getDoctorByIdController(req, res) {
 
     const result = await getDoctorByIdService(doctor_id);
 
-    if (!result.success) return res.status(404).json(result)
+    if (!result.success) return res.status(404).json(result);
 
     return res.status(200).json(result);
 

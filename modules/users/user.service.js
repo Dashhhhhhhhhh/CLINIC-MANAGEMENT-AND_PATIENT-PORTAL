@@ -4,6 +4,8 @@ const { User } = require('./user.model');
 const { Op } = require('sequelize');
 const { isValidUUID } = require("../../utils/security");
 const { Doctor } = require('../doctors/doctor.model');
+const { Staff } = require('../staff/staff.model');
+
 
 async function registerAuthService(email, username, password, role_id, gender) {
 
@@ -284,6 +286,24 @@ async function getAvailableUsersService() {
         users: availableUsers
     };
 }
+
+async function getAvailableUsersStaffService() {
+    const assignedUserIds = await Staff.findAll({ attributes: ['user_id'] });
+
+    const userIds = assignedUserIds.map(staff => staff.user_id);
+
+    const availableUsers = await User.findAll({
+        where: {
+            id: { [Op.notIn]: userIds }
+        }
+    });
+
+    return {
+        success: true,
+        users: availableUsers
+    };
+}
+
 module.exports = {
     registerAuthService,
     loginAuthService,
@@ -291,5 +311,6 @@ module.exports = {
     getUsersByIdService,
     updateUsersService,
     toggleUserStatusService,
-    getAvailableUsersService
+    getAvailableUsersService,
+    getAvailableUsersStaffService
 };
