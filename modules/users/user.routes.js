@@ -7,15 +7,9 @@ const {
   getUsersIdController, 
   updateUsersController, 
   toggleUserStatusController,
-  getAvailableController,
-  getAvailableStaffController
 } = require('./user.controller');
 
 router.get('/', getAllUsersController);
-
-router.get('/available', getAvailableController);
-
-router.get('/availableStaff', getAvailableStaffController);
 
 router.get('/:id', getUsersIdController);
 

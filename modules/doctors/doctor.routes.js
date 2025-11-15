@@ -6,12 +6,14 @@ const {
     getAllDoctorController,
     updateDoctorsController,
     getDoctorByIdController,
-    toggleDoctorStatusController
-
+    toggleDoctorStatusController,
+    getAvailableDoctorUsersController
 } = require('./doctor.controller');
 
 router.post('/', registerDoctorController);
 router.get('/', getAllDoctorController);
+
+router.get("/available-users", getAvailableDoctorUsersController);
 
 
 router.get('/:doctor_id', getDoctorByIdController);

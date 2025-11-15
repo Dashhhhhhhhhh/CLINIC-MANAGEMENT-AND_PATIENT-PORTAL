@@ -3,6 +3,7 @@ const { Doctor, createDoctor, getAllDoctors, getDoctorById, updateDoctor, toggle
 const { User } = require("../users/user.model");
 const { Specialization } = require("../specialization/specialization.model");
 const { Result } = require("pg");
+const { getAvailableUsersByModel } = require("../../utils/helpers/getAvailableUsers");
 
 async function registerDoctorService(user_id, first_name, middle_initial, last_name, license_number, contact_number, specialization_id, active) {
 
@@ -294,4 +295,8 @@ async function toggleDoctorStatusService(doctor_id, active) {
     };
 }
 
-module.exports = { registerDoctorService, getAllDoctorService, getDoctorByIdService, updateDoctorService, toggleDoctorStatusService };
+async function getAvailableDoctorUsersService() {
+    return await getAvailableUsersByModel(Doctor);
+}
+
+module.exports = { registerDoctorService, getAllDoctorService, getDoctorByIdService, updateDoctorService, toggleDoctorStatusService, getAvailableDoctorUsersService };

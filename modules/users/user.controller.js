@@ -1,4 +1,4 @@
-const { getAllUsersService, getUsersByIdService, updateUsersService, toggleUserStatusService, getAvailableUsersService, getAvailableUsersStaffService } = require('./user.service');
+const { getAllUsersService, getUsersByIdService, updateUsersService, toggleUserStatusService } = require('./user.service');
 
 async function getAllUsersController(req, res) {
   try {
@@ -85,43 +85,9 @@ async function toggleUserStatusController(req, res) {
     }
 }
 
-async function getAvailableController(req, res) {
-  try {
-
-    const result = await getAvailableUsersService();
-
-    if (!result.success) return res.status(400).json(result);
-
-    return res.status(200).json(result);
-
-
-  } catch (error) {
-    console.error("Error in getAvailableController:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
-  }
-}
-
-async function getAvailableStaffController(req, res) {
-  try {
-
-    const result = await getAvailableUsersStaffService();
-
-    if (!result.success) return res.status(400).json(result);
-
-    return res.status(200).json(result);
-
-
-  } catch (error) {
-    console.error("Error in getAvailableController:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
-  }
-}
-
 module.exports = {
   getAllUsersController,
   getUsersIdController,
   updateUsersController,
   toggleUserStatusController,
-  getAvailableController,
-  getAvailableStaffController
 };

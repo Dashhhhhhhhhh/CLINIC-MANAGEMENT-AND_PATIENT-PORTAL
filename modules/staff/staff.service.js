@@ -5,6 +5,7 @@ const { Position } = require("../positions/position.model");
 const e = require("cors");
 const { where } = require("sequelize");
 const { Sequelize } = require("sequelize");
+const { getAvailableUsersByModel } = require("../../utils/helpers/getAvailableUsers");
 
 
 async function registerStaffService (user_id, first_name, middle_initial, last_name, position_id, employee_number, contact_number, active) {
@@ -174,6 +175,7 @@ async function updateStaffService(staff_id, updateField) {
         if (!isValidUUID(staff_id)) {
             return { success: false, message: "Invalid staff id." };
         }
+
     const existingStaff = await Staff.findOne({ where: { staff_id: staff_id }});
 
     if (!existingStaff) return { success: false, message: "Staff not found" };
@@ -216,7 +218,7 @@ async function updateStaffService(staff_id, updateField) {
 
         if (update.middle_initial && update.middle_initial.length !== 1) return { success: false, message: "Middle initial must be exactly one character." };
         
-        if (update.last_name && update.last_name.length < 2 || update.last_name.length > 50) {
+        if (update.last_name && (update.last_name.length < 2 || update.last_name.length > 50)) {
             return {
                 success: false,
                 message: "Last name must be between 2 and 50 characters."
@@ -278,7 +280,7 @@ async function toggleStaffStatusService(staff_id, active) {
         }
     };
 
-    staff.active = !staff.active
+    staff.active = !staff.active;
     await staff.save();
 
     return {    
@@ -292,10 +294,17 @@ async function toggleStaffStatusService(staff_id, active) {
 
 }
 
+async function getAvailableStaffUsersService() {
+  return await getAvailableUsersByModel(Staff);
+}
+
+
+
 module.exports = {
     registerStaffService,
     getAllStaffService,
     getStaffByIdService,
     updateStaffService,
-    toggleStaffStatusService
+    toggleStaffStatusService,
+    getAvailableStaffUsersService
 };

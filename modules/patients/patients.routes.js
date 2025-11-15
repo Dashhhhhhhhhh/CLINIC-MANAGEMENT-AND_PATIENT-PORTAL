@@ -6,16 +6,20 @@ const {
     getPatientByIdController,
     getAllPatientsController,
     updatePatientController,
-    togglePatientStatusController
-} = require('../controllers/patientController');
+    togglePatientStatusController,
+    getAvailablePatientUsersController
+} = require('./patients.controller');
 
 router.post('/', registerPatientController);
 
 router.get('/', getAllPatientsController);
+router.get("/available-users", getAvailablePatientUsersController);
+
+
 router.get('/:id', getPatientByIdController);
 
 
-router.patch('/:id', updatePatientController);
+router.patch('/:patient_id', updatePatientController);
 router.patch('/:id/status', togglePatientStatusController);
 
 module.exports = router;

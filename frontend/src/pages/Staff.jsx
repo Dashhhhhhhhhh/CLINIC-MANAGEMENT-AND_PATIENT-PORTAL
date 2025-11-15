@@ -54,6 +54,7 @@ function Staff() {
       try {
         const result = await getAllStaff();
         setStaff(result.staff);
+      
       } catch (error) {
         let errorMessage = "";
 
@@ -84,8 +85,7 @@ function Staff() {
     const fetchAvailableUsers = async () => {
       try {
         const response = await fetch(
-          "http://localhost:3000/users/availableStaff"
-        );
+        "http://localhost:3000/staff/available-users");
         const data = await response.json();
 
         if (data.success) {
@@ -403,15 +403,31 @@ function Staff() {
               setAddStaff({ ...addStaff, last_name: e.target.value })
             }
           />
-          <p>Contact Number: {addStaff.contact_number}</p>
-          <input
-            type="text"
-            placeholder="Enter Contact Number"
-            value={addStaff.contact_number}
-            onChange={(e) =>
-              setAddStaff({ ...addStaff, contact_number: e.target.value })
-            }
-          />
+            <p>Contact Number</p>
+            <input
+                type="text"
+                placeholder="e.g., 09123456789"
+                value={addStaff.contact_number}
+                onChange={(e) => {
+                    const raw = e.target.value.trim();
+
+                    if (raw.startsWith("09")) {
+                        const converted = "+639" + raw.slice(2);
+                        setAddStaff({ ...addStaff, contact_number: converted });
+                        return;
+                    }
+
+                    if (raw.startsWith("+639")) {
+                        setAddStaff({ ...addStaff, contact_number: raw });
+                        return;
+                    }
+
+                    const valid = /^\+?[0-9]*$/.test(raw);
+                    if (!valid) return;
+
+                    setAddStaff({ ...addStaff, contact_number: raw });
+                }}
+            />
           <p>Position</p>
           <select
             value={selectedPosition}

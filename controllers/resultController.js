@@ -1,6 +1,6 @@
 const { isValidUUID } = require("../utils/security");
 const { Result, createResult, getAllResult, getResultById, updateResult, toggleResultDeleted } = require("../models/resultModel");
-const { Patient } = require("../models/patientModel");
+const { Patient } = require("../modules/patients/patients.model");
 
 async function createResultController (req, res) {
     try {

@@ -267,7 +267,7 @@ function Doctors() {
   useEffect(() => {
     const fetchAvailableUsers = async () => {
       try {
-        const response = await fetch("http://localhost:3000/users/available");
+        const response = await fetch("http://localhost:3000/doctors/available-users");
         const data = await response.json();
 
         if (data.success) {
@@ -439,15 +439,31 @@ function Doctors() {
             }
           />
 
-          <p>Contact Number</p>
-          <input
-            type="text"
-            placeholder="Enter contact number"
-            value={addDoctor.contact_number}
-            onChange={(e) =>
-              setAddDoctor({ ...addDoctor, contact_number: e.target.value })
-            }
-          />
+            <p>Contact Number</p>
+            <input
+                type="text"
+                placeholder="e.g., 09123456789"
+                value={addDoctor.contact_number}
+                onChange={(e) => {
+                    const raw = e.target.value.trim();
+
+                    if (raw.startsWith("09")) {
+                        const converted = "+639" + raw.slice(2);
+                        setAddDoctor({ ...addDoctor, contact_number: converted });
+                        return;
+                    }
+
+                    if (raw.startsWith("+639")) {
+                        setAddDoctor({ ...addDoctor, contact_number: raw });
+                        return;
+                    }
+
+                    const valid = /^\+?[0-9]*$/.test(raw);
+                    if (!valid) return;
+
+                    setAddDoctor({ ...addDoctor, contact_number: raw });
+                }}
+            />
 
           <p>Specialization</p>
           <select

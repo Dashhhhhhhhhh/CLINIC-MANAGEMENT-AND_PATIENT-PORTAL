@@ -6,12 +6,15 @@ const {
   getAllStaffController,
   getStaffByIdController,
   updateStaffController,
-  toggleStaffStatusController
+  toggleStaffStatusController,
+  getAvailableStaffUsersController
 } = require('./staff.controller');
 
 router.post('/', registerStaffController);
 
 router.get('/', getAllStaffController);
+
+router.get("/available-users", getAvailableStaffUsersController);
 
 router.get('/:id', getStaffByIdController);
 

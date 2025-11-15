@@ -1,4 +1,4 @@
-const { registerStaffService, getAllStaffService, getStaffByIdService, toggleStaffStatusService, updateStaffService } = require('./staff.service');
+const { registerStaffService, getAllStaffService, getStaffByIdService, toggleStaffStatusService, updateStaffService, getAvailableStaffUsersService } = require('./staff.service');
 
 async function registerStaffController(req, res) {
   try {
@@ -119,10 +119,24 @@ async function toggleStaffStatusController (req, res) {
   }
 }
 
+async function getAvailableStaffUsersController (req, res) {
+
+  try {
+    const result = await getAvailableStaffUsersService();
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+}
+
+
+
+
 module.exports = {
   registerStaffController,
   getAllStaffController,
   getStaffByIdController,
   updateStaffController,
-  toggleStaffStatusController
+  toggleStaffStatusController,
+  getAvailableStaffUsersController
 };

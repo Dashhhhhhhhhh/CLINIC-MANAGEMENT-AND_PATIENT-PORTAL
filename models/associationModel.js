@@ -3,7 +3,7 @@
 const { Doctor } = require("../modules/doctors/doctor.model");
 const { Specialization } = require("../modules/specialization/specialization.model");
 const { Admin } = require("./adminModel");
-const { Patient } = require("./patientModel");
+const { Patient } = require("../modules/patients/patients.model");
 const { Position } = require("../modules/positions/position.model");
 const { Staff } = require("../modules/staff/staff.model");
 const { User } = require("../modules/users/user.model");

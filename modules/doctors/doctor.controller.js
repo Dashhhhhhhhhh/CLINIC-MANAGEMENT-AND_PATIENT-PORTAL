@@ -1,4 +1,4 @@
-const { registerDoctorService, getAllDoctorService, getDoctorByIdService, updateDoctorService, toggleDoctorStatusService } = require('./doctor.service');
+const { registerDoctorService, getAllDoctorService, getDoctorByIdService, updateDoctorService, toggleDoctorStatusService, getAvailableDoctorUsersService } = require('./doctor.service');
 
 
 async function registerDoctorController(req, res) {
@@ -125,8 +125,14 @@ async function toggleDoctorStatusController(req, res) {
 }
 }
 
-
-
+async function getAvailableDoctorUsersController (req, res) {
+  try {
+    const result = await getAvailableDoctorUsersService();
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+}
 
 module.exports = {
   registerDoctorController,
@@ -134,4 +140,5 @@ module.exports = {
   updateDoctorsController,
   getDoctorByIdController,
   toggleDoctorStatusController,
+  getAvailableDoctorUsersController
 };

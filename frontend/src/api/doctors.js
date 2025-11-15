@@ -57,10 +57,11 @@ export async function toggleActiveDoctor(doctor_id, newStatus){
 
 export async function getAvailableUsers() {
     try {
-        const response = await api.get("/users/available");
+        const response = await api.get("/users/available-users");
         return response.data;
       } catch (error) {
       console.error("Error fetching available users:", error);
       throw error; 
     }
 }
+  

@@ -270,39 +270,6 @@ async function toggleUserStatusService (id, active) {
     };
 }
 
-async function getAvailableUsersService() {
-    const assignedUserIds = await Doctor.findAll({ attributes: ['user_id'] });
-
-    const userIds = assignedUserIds.map(doc => doc.user_id);
-
-    const availableUsers = await User.findAll({
-        where: {
-            id: { [Op.notIn]: userIds }
-        }
-    });
-
-    return {
-        success: true,
-        users: availableUsers
-    };
-}
-
-async function getAvailableUsersStaffService() {
-    const assignedUserIds = await Staff.findAll({ attributes: ['user_id'] });
-
-    const userIds = assignedUserIds.map(staff => staff.user_id);
-
-    const availableUsers = await User.findAll({
-        where: {
-            id: { [Op.notIn]: userIds }
-        }
-    });
-
-    return {
-        success: true,
-        users: availableUsers
-    };
-}
 
 module.exports = {
     registerAuthService,
@@ -311,6 +278,4 @@ module.exports = {
     getUsersByIdService,
     updateUsersService,
     toggleUserStatusService,
-    getAvailableUsersService,
-    getAvailableUsersStaffService
 };

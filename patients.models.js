@@ -68,7 +68,7 @@ const Patient = sequelize.define(
     },
     user_id: {
       type: DataTypes.UUID,
-      allowNull: true, 
+      allowNull: false, 
       references: {
         model: "users",
         key: "id",
