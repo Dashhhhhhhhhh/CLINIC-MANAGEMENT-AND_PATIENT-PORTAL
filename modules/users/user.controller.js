@@ -1,4 +1,42 @@
-const { getAllUsersService, getUsersByIdService, updateUsersService, toggleUserStatusService } = require('./user.service');
+const { registerAuthService, getAllUsersService, getUsersByIdService, updateUsersService, toggleUserStatusService, getAvailableRoleService } = require('./user.service');
+
+async function registerAuthController(req, res) {
+    try {
+
+        const { email, username, password, gender, role_id } = req.body;
+
+      
+        const result = await registerAuthService(
+            email,
+            username,
+            password,
+            gender,
+            role_id
+        );
+
+        if (!result.success) return res.status(400).json(result); 
+
+        return res.status(200).json(result);
+
+    } catch (error) {
+    console.error("Error creating user:", error);
+    if (error.errors) console.error(error.errors);
+    if (error.parent) console.error(error.parent);
+
+    if (error.name === "SequelizeUniqueConstraintError") {
+        return res.status(409).json({
+        success: false,
+        error: "Email or username already exists.",
+        });
+    }
+
+    return res.status(500).json({
+        success: false,
+        error: "Server error while creating user",
+    });
+    }
+}
+
 
 async function getAllUsersController(req, res) {
   try {
@@ -26,13 +64,13 @@ async function getUsersIdController(req, res) {
 
 
   } catch (error) {
-    console.error("Error creating bill:", error);
+    console.error("Error fetching user:", error);
     if (error.errors) console.error(error.errors);
     if (error.parent) console.error(error.parent);
 
     return res.status(500).json({
       success: false,
-      error: "Server error while creating bill"
+      error: "Server error while fetching user"
     });
   }
 }
@@ -85,9 +123,27 @@ async function toggleUserStatusController(req, res) {
     }
 }
 
+async function getAvailableRoleController(req, res) {
+  try {
+    
+    const result = await getAvailableRoleService();
+
+    if (!result.success) return res.status(404).json(result);
+
+    return res.status(200).json(result);
+
+  } catch (error) {
+    console.error("Error in getAvailableController:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+}
+
+
 module.exports = {
+  registerAuthController,
   getAllUsersController,
   getUsersIdController,
   updateUsersController,
   toggleUserStatusController,
+  getAvailableRoleController
 };

@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../db");
 const { comparePassword } = require("../../utils/security");
-const { Role } = require("../../models/roleModel");
+const { Role } = require("../roles/roles.model");
 
 const User = sequelize.define(
   "User",

@@ -200,6 +200,7 @@ async function updateStaffService(staff_id, updateField) {
             trimmed = value.trim();
         } else if (typeof value === 'number') {
             if(isNaN(value) || value < 0) continue;
+            trimmed = value;
         } else if (typeof value === 'boolean') {
             trimmed = value;
         } else {

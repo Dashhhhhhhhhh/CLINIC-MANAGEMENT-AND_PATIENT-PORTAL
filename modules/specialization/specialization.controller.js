@@ -16,7 +16,7 @@ async function createSpecializationController(req, res) {
 
 
   } catch (err) {
-    console.error("Error creating doctor:", err);
+    console.error("Error creating staff:", err);
 
     if (err.name === "SequelizeUniqueConstraintError") {
       return res.status(409).json({
@@ -50,9 +50,9 @@ async function getAllSpecializationController(req, res) {
 async function getSpecializationByIdController(req, res) {
     try {
 
-        const { id  } = req.params;
+        const { specialization_id  } = req.params;
 
-        const result = await getSpecializationByIdService(id);
+        const result = await getSpecializationByIdService(specialization_id);
 
         if(!result.success) return res.status(404).json(result);
 
@@ -67,11 +67,11 @@ async function getSpecializationByIdController(req, res) {
 async function updateSpecializataionController (req, res) {
     try {
 
-        const { id } = req.params;
+        const { specialization_id } = req.params;
         const updateField = req.body;
 
 
-        const result = await updateSpecializationService(id, updateField);
+        const result = await updateSpecializationService(specialization_id, updateField);
 
         if(!result.success) return res.status(404).json(result);
 

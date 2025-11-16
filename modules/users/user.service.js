@@ -1,5 +1,5 @@
 const { hashPassword, generateToken, comparePassword } = require('../../utils/security'); 
-const { Role } = require('../../models/roleModel');
+const { Role } = require('../roles/roles.model');
 const { User } = require('./user.model');
 const { Op } = require('sequelize');
 const { isValidUUID } = require("../../utils/security");
@@ -7,9 +7,9 @@ const { Doctor } = require('../doctors/doctor.model');
 const { Staff } = require('../staff/staff.model');
 
 
-async function registerAuthService(email, username, password, role_id, gender) {
+async function registerAuthService(email, username, password, gender, role_id) {
 
-        if (!email || !username || !password || !role_id || !gender) {
+        if (!email || !username || !password || !gender || !role_id) {
             return { success: false, message: "All fields are required." };
         }
 
@@ -48,9 +48,10 @@ async function registerAuthService(email, username, password, role_id, gender) {
             }
         });
 
+        if (existingUser) {
         if (existingUser.email === cleanedEmail) return { success: false, message: "Email already exists" };
         if (existingUser.username === cleanedUsername) return { success: false, message: "Username already exists" };
-
+        }
 
         const user = await User.create({
             email: cleanedEmail,
@@ -67,6 +68,7 @@ async function registerAuthService(email, username, password, role_id, gender) {
                 id: user.id,
                 email: user.email,
                 username: user.username,
+                password_hash: hashPassword,
                 gender: user.gender,
                 role_id: user.role_id,
                 active: user.active,
@@ -167,14 +169,14 @@ async function getUsersByIdService (id) {
 
         return { 
             success: true,
-            user: cleanUser.get({ plain: true }) 
+            user: cleanUser
         };
 }
 
 async function updateUsersService (id, updateField)  {
 
         if (!isValidUUID(id)) {
-            return { success: false, message: "Invalid user's id.1" };
+            return { success: false, message: "Invalid user's Id" };
         }
 
         const existingUser = await User.findOne({ where: {id: id} });
@@ -270,6 +272,16 @@ async function toggleUserStatusService (id, active) {
     };
 }
 
+async function getAvailableRoleService() {
+
+    const avaibleRole = await Role.findAll();
+
+    return {
+        success: true,
+        role: avaibleRole
+    }
+}
+
 
 module.exports = {
     registerAuthService,
@@ -278,4 +290,5 @@ module.exports = {
     getUsersByIdService,
     updateUsersService,
     toggleUserStatusService,
+    getAvailableRoleService
 };

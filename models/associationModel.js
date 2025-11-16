@@ -2,12 +2,11 @@
 
 const { Doctor } = require("../modules/doctors/doctor.model");
 const { Specialization } = require("../modules/specialization/specialization.model");
-const { Admin } = require("./adminModel");
 const { Patient } = require("../modules/patients/patients.model");
 const { Position } = require("../modules/positions/position.model");
 const { Staff } = require("../modules/staff/staff.model");
 const { User } = require("../modules/users/user.model");
-const { Role } = require("./roleModel");    
+const { Role } = require("../modules/roles/roles.model");    
 const { Hematology } = require("./hematologyModel");
 const { Result } = require("./resultModel");
 const { TestTypes } = require("./testTypesModel");
@@ -28,11 +27,6 @@ Position.hasMany(Staff, { foreignKey: "position_id", as: "staff" });
 Staff.belongsTo(Position, { foreignKey: "position_id", as: "position" });
 Staff.belongsTo(User, { foreignKey: "user_id", as: "user" });
 User.hasOne(Staff, { foreignKey: "user_id", as: "staff" });
-
-// 🧑‍💼 Admin ↔ Role ↔ User
-Admin.belongsTo(Role, { foreignKey: "role_id", as: "role" });
-Admin.belongsTo(User, { foreignKey: "user_id", as: "user" });
-User.hasOne(Admin, { foreignKey: "user_id", as: "admin" });
 
 // 🧍 Patient ↔ User
 Patient.belongsTo(User, { foreignKey: "user_id", as: "user" });

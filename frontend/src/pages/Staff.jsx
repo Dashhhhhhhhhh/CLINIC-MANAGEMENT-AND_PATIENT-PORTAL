@@ -363,7 +363,7 @@ function Staff() {
       {/* ================= Create Staff Form ================= */}
       <div style={{ marginTop: "2rem" }}>
         <h2>Create Staff</h2>
-        <form>
+        <form onSubmit={handleAddStaff}>
           <p>User ID</p>
           <select
             value={selectedUserId}
@@ -444,7 +444,7 @@ function Staff() {
             ))}
           </select>
 
-          <button onClick={handleAddStaff}>Submit</button>
+          <button type="submit">Submit</button>
 
           {successMessage && <p>{successMessage}</p>}
         </form>

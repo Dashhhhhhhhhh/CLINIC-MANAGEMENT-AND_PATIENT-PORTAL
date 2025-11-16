@@ -17,7 +17,7 @@ export async function getAllStaff() {
         console.log("Fetched staff:", response.data);
         return response.data;
   } catch (error) {
-    console.error("Error creating staff:", error);
+    console.error("Error fetching staff:", error);
     throw error; 
   }
 }

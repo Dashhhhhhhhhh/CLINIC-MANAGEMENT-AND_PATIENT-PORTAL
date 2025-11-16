@@ -10,7 +10,7 @@ async function createSpecializationService (specialization_name, description, ac
     if (!specialization_name || !specialization_name.trim()) {
       return {
         success: false,
-        error: "Specialization name is required."
+        message: "Specialization name is required."
       };
     }
 
@@ -18,15 +18,15 @@ async function createSpecializationService (specialization_name, description, ac
     const cleanedDescription = description ? description.trim() : null;
 
     if (cleanedSpecializationName.length < 2 || cleanedSpecializationName.length > 25 ) {
-        return{ success: false, error: "Specialization name must be atleat 2 characters." };
+        return{ success: false, message: "Specialization name must be atleat 2 characters." };
     }
 
     if (!sNameRegex.test(cleanedSpecializationName)) {
-        return { success: false, error: "Specialization name can only contain letters, spaces, hyphens (-), and apostrophes (')."};
+        return { success: false, message: "Specialization name can only contain letters, spaces, hyphens (-), and apostrophes (')."};
     }
 
     if (cleanedDescription && cleanedDescription.length > 255) {
-        return { success: false, error: "Description must not exceed 255 characters."};
+        return { success: false, message: "Description must not exceed 255 characters."};
     }
 
     let isActive = true;
@@ -48,13 +48,11 @@ async function createSpecializationService (specialization_name, description, ac
         isActive
     });
 
-    const newSpecialization = specialization.get ? specialization.get({ plain: true }) :specialization
-
     return {
         success: true,
-        message: "specialization created successfully",
-        specialization: newSpecialization
-    }
+        message: "specialization created successfully.",
+        specialization: specialization
+    };
 
 }
 

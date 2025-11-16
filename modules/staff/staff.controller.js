@@ -82,7 +82,7 @@ async function updateStaffController(req, res) {
 
     const result = await updateStaffService(staff_id, updateField);
 
-    if(!result.success) return res.status(404).json(result)
+    if(!result.success) return res.status(404).json(result);
 
     return res.status(200).json(result);   
 
