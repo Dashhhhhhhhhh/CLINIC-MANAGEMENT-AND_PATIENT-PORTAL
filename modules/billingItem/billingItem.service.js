@@ -1,34 +1,61 @@
-const { Billing } = require("./billingMainModel");
-const { BillingItem } = require("./billingItemModel");
-const { BillingService } = require("./billingServiceModel");
-const { isValidUUID } = require("../utils/security");
-const { updateRole } = require("../models/roleModel");
+const { Billing } = require("../billingMain/billingMain.model");
+const { BillingItem } = require("./billingItem.model");
+const { BillingService } = require("../billingService/billingService.model");
+const { isValidUUID } = require("../../utils/security");
+const { getUTC, formatToPh } = require("../../utils/datetime");
+const { Staff } = require("../staff/staff.model");
+
 
 async function createBillingItemService(billing_id, created_by, service_id, description, quantity, unit_price) {
+    
     const cleanBillingId = billing_id?.trim();
+    const cleanCreatedByID = created_by?.trim();
     const cleanServiceId = service_id?.trim();
     const trimDescription = description?.trim() || null;
 
-    if (!cleanBillingId || !isValidUUID(cleanBillingId)) {
-        return { success: false, message: "Invalid or missing billing_id." };
+    if (!cleanCreatedByID || !isValidUUID(cleanCreatedByID)) {
+        return { success: false, message: "Invalid or missing staff ID."};
     }
+    
+    const existingCreatedBy = await Staff.findOne ({ where: { user_id: cleanCreatedByID }});
+
+    if(!existingCreatedBy) {
+        return { success: false, message: "Invalid created by"};
+    }
+
+    if (!cleanBillingId || !isValidUUID(cleanBillingId)) {
+        return { success: false, message: "Invalid or missing billing ID." };
+    }
+
+
     if (!cleanServiceId || !isValidUUID(cleanServiceId)) {
-        return { success: false, message: "Invalid or missing service_id." };
+        return { success: false, message: "Invalid or missing service ID." };
     }   
 
+    if (trimDescription && trimDescription.length > 100) {
+    return { success: false, message: "Description must not exceed 100 characters." };
+    }
+    
     if (isNaN(quantity)) {
         return { success: false, message: "Quantity must be a valid number." };
     }
     if (Number(quantity) < 0) {
         return { success: false, message: "Quantity cannot be negative." };
     }
-
-    if (isNaN(unit_price)) {
+    const normalizeQuantity = Number(quantity);
+    
+    const numPrice = Number(unit_price);
+    if (isNaN(numPrice)) {
         return { success: false, message: "Unit price must be a valid number." };
     }
-    if (Number(unit_price) < 0) {
+    if (Number(numPrice) < 0) {
         return { success: false, message: "Unit price cannot be negative." };
     }
+    const decimals = unit_price.toString().split(".")[1];
+    if (decimals && decimals.length > 2) {
+        return { success: false, message: "Unit price must have at most 2 deciamls please.";}
+    }
+    const normalizeUnitPrice = numPrice;
 
     const billing = await Billing.findOne({
         where: { billing_id: cleanBillingId },
@@ -42,7 +69,7 @@ async function createBillingItemService(billing_id, created_by, service_id, desc
     if (billing.is_deleted) {
         return { success: false, message: "Cannot add item to deleted bill." };
     }
-    if (billing.finalized_at !== null && billing.finalized_at !== undefined) {
+    if (billing.finalized_at) {
         return { success: false, message: "Cannot add items to a finalized billing." };
     }
 
@@ -61,26 +88,30 @@ async function createBillingItemService(billing_id, created_by, service_id, desc
         return { success: false, message: "Cannot add item to inactive service." };
     }
 
-
-    const computedSubTotal = Number(quantity) * Number(unit_price);
-
+    const roundedUnitPrice = parseFloat(numPrice.toFixed(2));
+    const computedSubTotal = parseFloat((normalizeQuantity * roundedUnitPrice).toFixed(2));
 
     const item = await BillingItem.create({
         billing_id: cleanBillingId,
         service_id: cleanServiceId,
         description: trimDescription,
-        quantity,
-        unit_price,
+        quantity: normalizeQuantity,
+        unit_price: roundedUnitPrice,
         subtotal: computedSubTotal,
-        created_by
+        created_by: existingCreatedBy.staff_id,
+        created_at: getUTC(),
     });
+
 
     const newTotal = await BillingItem.sum("subtotal", {
         where: { billing_id: cleanBillingId, is_deleted: false},
     });
 
+
+    const roundTotal = Number(newTotal.toFixed(2));
+
     await Billing.update(
-        { total_amount: newTotal },
+        { total_amount: roundTotal },
         { where: { billing_id: cleanBillingId} }
     );
 
@@ -88,15 +119,20 @@ async function createBillingItemService(billing_id, created_by, service_id, desc
     return {
         success: true,
         message: "Billing item created successfully",
-        updated_total: newTotal,
+        updated_total: roundTotal,
         item: item
      };
 }
 
 
-async function getAllItemService() {
+async function getAllItemService(is_deleted) {
 
-    const item = await BillingItem.findAll({
+    const whereClause = {};
+
+    if (is_deleted !== undefined) whereClause.is_deleted = is_deleted;
+
+    const billingItem = await BillingItem.findAll({
+        where: whereClause,
         attributes: [
             "billing_item_id",
             "billing_id",
@@ -105,10 +141,23 @@ async function getAllItemService() {
             "quantity",
             "unit_price",
             "subtotal",
-        ]
+            "created_by",
+            "created_at",
+            "updated_at"
+        ],
+        include: [
+            {
+                model: BillingService,
+                as: "service",
+                attributes: ["service_id", "service_name", "description", "default_price"],
+            },
+        ],
     });
 
-    return item;
+    return {
+        success: true,
+        billingItem: billingItem.map(item=> item.get({ plain: true }))
+    };
 }
 
 async function getItemByIdService (billing_item_id) {
@@ -116,29 +165,38 @@ async function getItemByIdService (billing_item_id) {
         if (!isValidUUID(billing_item_id)) {
             return { success: false, error: "Invalid UUID" };
         }
+        
+        const billingItem = await BillingItem.findByPk(billing_item_id, {
+        attributes: [
+            "billing_item_id",
+            "billing_id",
+            "service_id",
+            "description",
+            "quantity",
+            "unit_price",
+            "subtotal",
+            "created_by",
+            "created_at",
+            "updated_at"
+        ],
+        include: [
+            {
+                model: BillingService,
+                as: "service",
+                attributes: ["service_id", "service_name", "description", "default_price"],
+            },
+        ],
+    });
 
-        const item = await BillingItem.findOne({ where: { billing_item_id} });
+    if (!billingItem) return { success: false, message: "Billing item not found."};
 
-        if (!item) return { success: false, message: "Billing item not found" };
-
-        return { success: true, item };
+    return {
+        success: true,
+        billingItem: billingItem.get({ plain: true })
+    }
 
 }
 
-async function getItemByPatientIdService(patient_id) {
-
-    if (!isValidUUID(patient_id)) {
-        return { success: false, message: "Invalid UUID" };
-    }
-
-    const item = await BillingItem.findOne(patient_id);
-
-    if (!item) {
-        return { success: false, message: "Billing item not found" };
-    }
-
-    return { success: true, data: item };
-}
 
 async function updateBillingItemService (billing_item_id, updateField) {
 
@@ -200,37 +258,61 @@ async function updateBillingItemService (billing_item_id, updateField) {
         update[field] = trimmed;
         }
     
-    
-    if (!isValidUUID(update.service_id)) {
-        return { success: false, error: "Invalid service id." };
+        if (update.service_id) {
+            if (!isValidUUID(update.service_id)) {
+                return { success: false, error: "Invalid service id." };
+            }
+
+            const service = await BillingService.findOne({ where: { service_id: update.service_id } });
+            
+            if (!service) {
+                return { success: false, error: "Service not found." };
+            } 
+            
+            if (service.is_deleted === true) {
+                return { success: false, error: "Cannot use deleted service."};
+            }
+
+            if (service.is_active === false) {
+                return { success: false, error: "Cannot use inactive service."};
+            }
     }
 
-    const service = await BillingService.findOne({ where: { service_id: update.service_id } });
-    
-    if (!service) {
-        return { success: false, error: "Service not found." };
-    } 
-    
-    if (service.is_deleted === true) {
-        return { success: false, error: "Cannot use deleted service."};
+    if (update.description) {
+        if (update.description && update.description.length > 100) {
+        return { success: false, message: "Description must not exceed 100 characters." };
+        }
     }
-
-    if (service.is_active === false) {
-        return { success: false, error: "Cannot use inactive service."};
-    }
-    
        
-    if ('quantity' in update || 'unit_price' in update) {
-        const newQuantity = update.quantity ?? existingItem.quantity;
-        const newPrice = update.unit_price ?? existingItem.unit_price;
-
-        update.subtotal = newQuantity * newPrice;
+    if(update.quantity !== undefined) {
+        const q = Number(update.quantity);
+        if(isNaN(q) || q < 0 || !Number.isInteger(q)) {
+            return { success: false, message:"Quantity must be a non-negative integer." }
+        }
     }
 
+    if(update.unit_price !== undefined) {
+            const up = Number(update.unit_price);
+            if(isNaN(up) || up < 0) {
+                return { success: false, message: "Unit price must be a non-negative number."};
+            }
 
+            if(!/^\d+(\.\d{1,2})?$/.test(update.unit_price.toString())) {
+            return { success: false, message: "Unit price may only have up to 2 decimal places." };
+        }
+    }   
+    
 
     if (Object.keys(update).length === 0) {
-    return { success: false, message: "No fields provided to update" };
+        return { success: false, message: "No fields provided to update" };
+    }
+
+
+
+    if (update.quantity !== undefined || update.unit_price !== undefined) {
+        const quantity = update.quantity ?? existingItem.quantity;
+        const price = update.unit_price ?? existingItem.unit_price;
+        update.subtotal = quantity * price;
     }
 
     const updatedItem = await BillingItem.update(update, {
@@ -243,7 +325,7 @@ async function updateBillingItemService (billing_item_id, updateField) {
         where: { billing_id: refreshedItem.billing_id, is_deleted: false }
     });
 
-    const safeTotal = newTotal ?? 0;
+    const safeTotal = newTotal ? Number(newTotal.toFixed(2)) : 0;
 
     await Billing.update(
         { total_amount: safeTotal },
@@ -251,22 +333,29 @@ async function updateBillingItemService (billing_item_id, updateField) {
     );
 
 
+    const plain = refreshedItem.get({ plain: true });
+    plain.created_at = formatToPh(plain.created_at);
+    plain.updated_at = formatToPh(plain.updated_at);
+
+
     return {
         success: true,
-        message: "Billing item updated sucessfully",
-        updateField: refreshedItem
+        message: "Billing item updated successfully",
+        billingItem: plain
         };
 }
 
-async function toggleDeletebillingItemService(billing_item_id, billing_id, is_deleted) {
-
+async function toggleDeletebillingItemService(billing_item_id, billing_id, is_deleted, toggled_by) {
+        
+            
         if (!isValidUUID(billing_item_id)) {
             return ({ success: false, error: "Invalid billing item id" });
-        }
+        }   
 
         const existingBilling = await Billing.findOne({
             where: { billing_id: billing_id } 
         });
+
 
         if (!isValidUUID(billing_id)) {
             return { success: false, error: "Invalid billing id" };
@@ -283,6 +372,22 @@ async function toggleDeletebillingItemService(billing_item_id, billing_id, is_de
         if (existingBilling.finalized_at !== null) {
             return { success: false, message: "Billing is already finalized cannot be modified."}
         }
+
+        const cleanToggleBy = toggled_by?.trim();
+
+        if(!cleanToggleBy || !isValidUUID(cleanToggleBy)) {
+            return { success: false, mesage: "Invalid toggled_by ID."};
+        }
+
+        const existingStaff = await Staff.findOne({
+            where: { user_id: cleanToggleBy}
+        });
+
+        if (!existingStaff) {
+            return { success: false, message: "Staff not found."};
+        } 
+
+        const staffId = existingStaff.staff_id;
 
         const existingItem = await BillingItem.findOne({
           where: { billing_item_id: billing_item_id }  
@@ -304,16 +409,27 @@ async function toggleDeletebillingItemService(billing_item_id, billing_id, is_de
                     : "Billing item is already active."
             };
         }
-    
-    existingItem.is_deleted = is_deleted;
-    await existingItem.save();
+
+        existingItem.is_deleted = is_deleted;
+        existingItem.updated_at = getUTC();
+        
+
+        if (is_deleted) {
+            existingItem.deleted_by = staffId;
+            existingItem.deleted_at = getUTC();
+        } else {
+            existingItem.deleted_by = null;
+            existingItem.deleted_at = null;
+        }
+        
+        await existingItem.save();
 
 
     const newTotal = await BillingItem.sum("subtotal", {
         where: { billing_id, is_deleted: false}
     });
 
-    const safeTotal = newTotal ?? 0;
+    const safeTotal = newTotal ? Number(newTotal.toFixed(2)) : 0;
 
     await Billing.update(
         { total_amount: safeTotal },
@@ -336,7 +452,6 @@ module.exports = {
     createBillingItemService,
     getAllItemService,
     getItemByIdService,
-    getItemByPatientIdService,
     updateBillingItemService,
     toggleDeletebillingItemService
 }

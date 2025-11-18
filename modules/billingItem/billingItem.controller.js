@@ -1,0 +1,184 @@
+const { createBillingItemService, getAllItemService, getItemByIdService, updateBillingItemService, toggleDeletebillingItemService } = require("./billingItem.service");
+const { formatToPh } = require("../../utils/datetime");
+
+async function createBillingItemController (req, res) {
+    try {
+
+    const { 
+      billing_id,
+      service_id, 
+      description, 
+      quantity, 
+      unit_price,
+      sub_total,
+      created_at,
+    } = req.body;
+
+    const created_by = req.staff?.staff_id;
+
+    if(!created_by) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: Staff not authenticated"
+      });
+    }
+
+
+   const result = await createBillingItemService(
+      billing_id, 
+      service_id,
+      description,
+      quantity,
+      unit_price,
+      sub_total,
+      created_by,
+      created_at
+    );
+
+    if(!result.success) return res.status(400).json(result);
+
+    const item = result.item;
+    
+    item.created_at = formatToPh(item.created_at);
+    item.updated_at = formatToPh(item.updated_at);
+
+
+    return res.status(201).json({
+      ...result,
+      item: item
+    });
+
+  } catch (error) {
+    console.error("Error creating billItem:", error);
+    if (error.errors) console.error(error.errors);
+    if (error.parent) console.error(error.parent);
+
+    return res.status(500).json({
+      success: false,
+      error: "Server error while creating bill item"
+    });
+  }
+}
+
+async function getAllItemController (req, res){
+    try {
+
+        const { is_deleted } = req.query;
+
+        const result = await getAllItemService(is_deleted);
+        
+        result.item = result.billingItem.map(items => ({
+          ...items,
+          created_at: formatToPh(items.created_at),
+          updated_at: formatToPh(items.updated_at),
+        }));
+
+        return res.status(200).json({
+          ...result,
+          item: result.item
+        });
+
+    } catch (error) {
+        return res.status(error.status || 500).json({
+            success: false,
+            message: "Internal server error"
+        });
+    }
+}
+
+async function getItemByIdController (req, res) {
+    try {
+
+        const { billing_item_id } = req.params;
+
+    const result = await getItemByIdService(billing_item_id);
+    
+    if(!result.success) return res.status(404).json({ success: false, message: "Billing Item not found" });
+    
+      const item = result.billingItem;
+      item.created_at = formatToPh(item.created_at);
+      item.updated_at = formatToPh(item.updated_at);
+
+    return res.status(200).json({
+      ...result,
+      item
+    });
+
+
+  } catch (error) {
+    console.error("Error creating bill:", error);
+    if (error.errors) console.error(error.errors);
+    if (error.parent) console.error(error.parent);
+
+    return res.status(500).json({
+      success: false,
+      error: "Server error while creating bill"
+    });
+  }
+}
+
+
+async function updateBillingItemController (req, res) {
+    try {
+
+        const { billing_item_id } = req.params;     
+    
+        const updateField = req.body;
+
+    const result = await updateBillingItemService(billing_item_id, updateField);
+
+    if (!result.success) return res.status(404).json(result);
+    
+
+
+    return res.status(200).json(result);
+
+
+  } catch (error) {
+    console.error("Error updating bill item:", error);
+    if (error.errors) console.error(error.errors);
+    if (error.parent) console.error(error.parent);
+
+    return res.status(500).json({
+      success: false,
+      error: "Server error while updating bill item."
+    });
+  }
+}
+
+
+async function toggleDeletebillingItemController (req, res) {
+    try {
+
+        const { billing_item_id } = req.params;
+        const { billing_id, is_deleted, toggled_by } = req.body;
+    
+        const result = await toggleDeletebillingItemService(billing_item_id, billing_id, is_deleted, toggled_by);
+
+        if (!result.success) {
+            return res.status(404).json(result);
+        }       
+
+        return res.status(200).json({ 
+            success: true,
+            message: result.message,
+            data: result.data
+         });
+
+
+    } catch (error) {
+        return res.status(error.status || 500).json({
+            success: false,
+            message: "Internal server error"
+        });
+    }
+}
+
+
+module.exports = {
+    createBillingItemController,
+    getAllItemController,
+    getItemByIdController,
+    updateBillingItemController,
+    toggleDeletebillingItemController
+}

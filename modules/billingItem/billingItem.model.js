@@ -1,6 +1,6 @@
+const sequelize = require("../../db");
 const { DataTypes } = require("sequelize");
-const sequelize = require("../db");
-const { Billing } = require("./billingMainModel");
+const { Billing } = require("../billingMain/billingMain.model");
 
 
 const BillingItem = sequelize.define(
@@ -29,15 +29,15 @@ const BillingItem = sequelize.define(
         },
         description: {
             type: DataTypes.TEXT,
-            allownull: true,
+            allowNull: true,
         },
         quantity: {
             type: DataTypes.INTEGER,
-            allownull: true,
+            allowNull: true,
         },
         unit_price: {
             type: DataTypes.DECIMAL(10, 2),
-            allownull: true,
+            allowNull: true,
         },
         subtotal: {
             type: DataTypes.DECIMAL(10, 2), 
@@ -47,7 +47,20 @@ const BillingItem = sequelize.define(
             type: DataTypes.BOOLEAN,
             allowNull: true,
             defaultValue: false,
-        },     
+        },
+        created_by: {
+            type: DataTypes.UUID,
+            allowNull: false,
+        },
+        updated_by: {
+            type: DataTypes.UUID,
+        },
+        deleted_by: {
+            type: DataTypes.UUID,
+        },
+        deleted_at: {
+            type: DataTypes.DATE
+        },
     },
     {
         tableName: "billing_item",
@@ -67,7 +80,8 @@ async function createBillingItem(data) {
         description: data.description,
         quantity: data.quantity,
         unit_price: data.unit_price,
-        subtotal: data.subtotal
+        subtotal: data.subtotal,
+        created_by: data.created_by
     })
 }
 

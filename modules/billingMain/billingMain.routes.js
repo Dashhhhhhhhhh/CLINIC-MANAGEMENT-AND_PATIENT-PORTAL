@@ -8,7 +8,7 @@ const {
     getBillingByPatientIdController,
     toggleDeletebillingController,
     finalizeBillingController
-} = require('../billing/billingMainController');
+} = require('../billingMain/billingMain.controller');
 
 const authMiddleware = require("../middleware/authMiddleware");
 

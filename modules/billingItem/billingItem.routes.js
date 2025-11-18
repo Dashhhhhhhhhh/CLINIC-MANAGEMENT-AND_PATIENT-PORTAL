@@ -3,14 +3,14 @@ const router = express.Router();
 
 const authenticateJWT = require("../middleware/authMiddleware");
 
+
 const {
     createBillingItemController,
     getAllItemController,
     getItemByIdController,
-    getItemByPatientIdController,
     updateBillingItemController,
     toggleDeletebillingItemController
-} = require('../billing/billingItemController');
+} = require('../billingItem/billingItem.controller');
 
 router.post('/', authenticateJWT, createBillingItemController);
 router.get('/', authenticateJWT, getAllItemController);

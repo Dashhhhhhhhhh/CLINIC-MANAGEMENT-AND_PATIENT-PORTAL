@@ -13,7 +13,9 @@ const { TestTypes } = require("./testTypesModel");
 const { Urinalysis } = require("./urinalysisModel");
 const { Xray } = require("./xrayModel");
 const { Ultrasound } = require("./ultrasoundModel");
-
+const { Billing } = require("../modules/billingMain/billingMain.model");
+const { BillingItem } = require("../modules/billing/billingItemModel");
+    
 // 👆 You need this since you are referencing Role in multiple associations.
 
 // 🩺 Doctor ↔ Specialization ↔ User
@@ -71,3 +73,18 @@ Xray.belongsTo(Result, { foreignKey: "result_id" });
 //Ultrasound ↔ Results
 Result.hasOne(Ultrasound, { foreignKey: "result_id" });
 Ultrasound.belongsTo(Result, { foreignKey: "result_id" });
+
+//BillingMain ↔ Patient
+
+Billing.belongsTo(Patient, {foreignKey: "patient_id" });
+Patient.hasMany(Billing, {foreignKey: "patient_id" });
+
+//BillingMain ↔ Staff
+
+Staff.hasMany(Billing, {foreignKey: "created_by" });
+Billing.belongsTo(Staff, {foreignKey: "created_by" });
+
+//BillingItem ↔ Billing
+
+BillingItem.hasMany(BillingItem, {foreignKey: "billing_id", as: "items"});
+BillingItem.belongsTo(Billing, {foreignKey: "billing_id", as: "billing"});
