@@ -30,6 +30,9 @@ require("./models/hematologyModel");
 require("./models/urinalysisModel");
 require("./models/xrayModel");
 require("./models/ultrasoundModel");
+require("./modules/billingMain/billingMain.model");
+require("./modules/billingItem/billingItem.model");
+require("./modules/billingService/billingService.model");
 
 
 const userRoutes = require("./modules/users/user.routes");
@@ -46,6 +49,11 @@ const resultRoutes = require("./routes/result");
 const urinalysisRoutes = require("./routes/urinalysis");
 const xrayRoutes = require("./routes/xray");
 const ultrasoundRoutes = require("./routes/ultrasound");
+const billingMainRoutes = require("./modules/billingMain/billingMain.routes");
+const billingItemRoutes = require("./modules/billingItem/billingItem.routes");
+const billingServiceRoutes = require("./modules/billingService/billingService.routes");
+
+
 
 app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
@@ -61,6 +69,11 @@ app.use("/test-types", testTypesRoutes);
 app.use("/urinalysis", urinalysisRoutes);
 app.use("/xray", xrayRoutes);
 app.use("/ultrasound", ultrasoundRoutes);
+app.use('/billing', billingMainRoutes);
+app.use('/billing-item', billingItemRoutes);
+app.use('/billing-service', billingServiceRoutes);
+
+
 
 app.get('/', (req, res) => {
   res.send('Server is running');

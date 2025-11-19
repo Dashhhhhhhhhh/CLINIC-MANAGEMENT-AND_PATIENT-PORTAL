@@ -14,7 +14,7 @@ const { Urinalysis } = require("./urinalysisModel");
 const { Xray } = require("./xrayModel");
 const { Ultrasound } = require("./ultrasoundModel");
 const { Billing } = require("../modules/billingMain/billingMain.model");
-const { BillingItem } = require("../modules/billing/billingItemModel");
+const { BillingItem } = require("../modules/billingItem/billingItem.model");
     
 // 👆 You need this since you are referencing Role in multiple associations.
 

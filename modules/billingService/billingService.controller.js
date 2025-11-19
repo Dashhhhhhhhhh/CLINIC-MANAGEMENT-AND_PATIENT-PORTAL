@@ -1,5 +1,5 @@
-const { isValidUUID } = require("../utils/security");
-const { BillingService, createBillingService, getAllBillingService, getBillingServiceById, updateService, toggleDeleteService } = require("../billing/billingServiceModel");
+const { createBillingServiceService, getAllBillingServiceService, getBillingServiceByIdService, updateServiceService, toggleDeleteServicService} = require("../billingService/billingService.service");
+const { formatToPh } = require("../../utils/datetime");
 
 async function createBillingServiceController (req, res) {
     try {
@@ -9,34 +9,30 @@ async function createBillingServiceController (req, res) {
             description,
             default_price,
             category,
+            is_active,
         } = req.body;
 
-        const trimServiceName = service_name.trim() || null;
-        const trimDescription = description.trim();
-        const trimCategory = category.trim();
-        
-        if (!trimServiceName) {
-          return res.status(400).json({ success: false, message: "Service name is required" });
-        }
+    const result = await createBillingServiceService(
+      service_name,
+      description,
+      default_price,
+      category,
+      is_active,
+    );
 
-        if (Number(default_price) < 0) {
-            return res.status(400).json({ success: false, message: "Default price cannot be negative. "});
-        }
+    if(!result.success) return res.status(400).json(result);
 
-        const createService = await createBillingService({
-            service_name: trimServiceName,
-            description: trimDescription,
-            default_price: default_price,
-            category: trimCategory,
-        });
+    const service = result.service;
+    service.created_at = formatToPh(service.created_at);
 
-        return res.status(200).json({
-            success: true,
-            message: "Service created successfully",
-            createService
-        })
 
-  } catch (error) {
+    return res.status(201).json({
+      ...result,
+      service
+    });
+
+
+    } catch (error) {
     console.error("Error creating bill service:", error);
     if (error.errors) console.error(error.errors);
     if (error.parent) console.error(error.parent);
@@ -50,13 +46,20 @@ async function createBillingServiceController (req, res) {
 async function getAllBillingServiceController (req, res) {
   try  {
     
-    const service = await getAllBillingService();
+    const { is_deleted } = req.query;
+
+    const result = await getAllBillingServiceService(is_deleted);
+
+    result.billingService = result.billingService.map(service => ({
+      ...service,
+      created_at: formatToPh(service.created_at),
+      updated_at: formatToPh(service.updated_at)
+    }));
 
         return res.status(200).json({
-            success: true,
-            count: service.length,
-            service
-        })
+          ...result,
+          billingService: result.billingService
+        });
 
   } catch (err) {
     console.error("Error fetching service results.", err);
@@ -67,23 +70,25 @@ async function getAllBillingServiceController (req, res) {
 async function getBillingServiceByIdController (req, res) {
   try {
 
-    const { id } = req.params;
+    const { service_id } = req.params;
 
-    if (!isValidUUID(id)) {
-        return res.status(400).json({ success: false, error: "Invalid UUID" });
+    if (!isValidUUID(iservice_idd)) {
+        return res.status(400).json({ success: false, error: "Invalid billing service ID." });
     }    
 
-    const service = await getBillingServiceById(id);
+    const result = await getBillingServiceByIdService(service_id);
 
-    if (!service) {
-      return res.status(404).json({ success: false, error: " Service not found" });
-    }
+    if (!result.success) return res.status(404).json({ success: false, message: "Billing service not found" });
+
+
+    const service = result.billingService;
+    service.created_at = formatToPh(service.created_at);
+    service.updated_at = formatToPh(service.updated_at);
 
     return res.status(200).json({
-      success: true,
-      count: service.length,
-      service
-    })
+      ...result,
+      billingService: service
+    });
 
   } catch (err) {
     console.error("Error in getting item result by ID:", err);
@@ -93,60 +98,20 @@ async function getBillingServiceByIdController (req, res) {
 
 async function updateServiceController (req, res) {
   try {
+    
+    const { service_id } = req.params;
 
-    const { id } = req.params;
+    const updateField = req.body;
 
-    const updated_by = req.user.id;      
+    const result = await updateServiceService(service_id, updateField);
 
-    if (!isValidUUID(id)) {
-      return res.status(400).json({ success: false, error: "Invalid UUID" });
+      if(!result.success) {
+        if (result.message === "Service not found") {
+        return  res.status(404).json(result);
+      }
+      return res.status(200).json(result);
     }
-
-    const update = {};
-
-    const allowedFields = [
-      "service_name",
-      "description",
-      "default_price",
-      "category"
-    ];
-
-      for (const field of allowedFields) {
-        let value = req.body[field];
-        if (value === undefined || value === null) continue;
-
-        let trimmed;
-
-        if (typeof value === 'string') {
-          trimmed = value.trim();
-        } else if (typeof value === 'number') {
-          if (isNaN(value) || value < 0) continue;
-          trimmed = value;
-        } else {
-          continue;
-        }
-
-        update[field] = trimmed;
-      }
-
-      if (Object.keys(update).length === 0) {
-                return res.status(404).json({ success: false, message: "No fields provided to update." });
-      }
-
-      update.updated_by = updated_by;
-
-      const service = await updateService(id, update);
-
-      if (!service) {
-        return res.status(404).json({ success: false, error: "Item not found" });
-      }
-     
-      return res.status(200).json({ 
-        success: true,
-        message: "Service updated successfully",
-        service
-      });
-
+    
   } catch (err) {
     console.error("Error in updating Service controller", err);
     return res.status(500).json({
@@ -159,25 +124,15 @@ async function updateServiceController (req, res) {
 async function toggleDeleteServiceController (req, res) {
   try {
 
-    const { id } = req.params;
+    const { service_id } = req.params;
 
-    const updated_by = req.user.id; 
+    const result = await toggleDeleteServicService(service_id);
 
-    if (!isValidUUID(id)) {
-      return res.status(400).json({ success: false, error: "Invalid UUID" });
+    if (!result.success) {
+      return res.status(404).json(result);
     }
-    
-    const service = await toggleDeleteService(id, updated_by);
 
-    if (!service) {
-      return res.status(404).json({ success: false, error: "Item not found."});
-    }   
-
-    return res.status(200).json({
-      success: true,
-      message: service.is_deleted ? "Service deleted." : "Service restored.",
-      service,
-    });
+    return res.status(200).json(result);
 
   
   } catch (err) {

@@ -7,12 +7,12 @@ const {
     getBillingServiceByIdController,
     updateServiceController,
     toggleDeleteServiceController
-} = require('../billing/billingServiceController');
+} = require('../billingService/billingService.controller');
 
 router.post('/', createBillingServiceController);
 router.get('/', getAllBillingServiceController);
-router.get('/:id', getBillingServiceByIdController);
-router.patch('/:id',updateServiceController );
-router.patch('/:id/toggle-delete', toggleDeleteServiceController);
+router.get('/:service_id', getBillingServiceByIdController);
+router.patch('/:service_id', updateServiceController);
+router.patch('/:service_id/toggle-delete', toggleDeleteServiceController);
 
 module.exports = router;

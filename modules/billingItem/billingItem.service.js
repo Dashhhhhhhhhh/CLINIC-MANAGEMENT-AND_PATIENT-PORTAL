@@ -53,7 +53,7 @@ async function createBillingItemService(billing_id, created_by, service_id, desc
     }
     const decimals = unit_price.toString().split(".")[1];
     if (decimals && decimals.length > 2) {
-        return { success: false, message: "Unit price must have at most 2 deciamls please.";}
+        return { success: false, message: "Unit price must have at most 2 deciamls please."};
     }
     const normalizeUnitPrice = numPrice;
 
@@ -163,7 +163,7 @@ async function getAllItemService(is_deleted) {
 async function getItemByIdService (billing_item_id) {
 
         if (!isValidUUID(billing_item_id)) {
-            return { success: false, error: "Invalid UUID" };
+            return { success: false, error: "Invalid billing item ID." };
         }
         
         const billingItem = await BillingItem.findByPk(billing_item_id, {
@@ -201,7 +201,7 @@ async function getItemByIdService (billing_item_id) {
 async function updateBillingItemService (billing_item_id, updateField) {
 
     if (!isValidUUID(billing_item_id)) {
-        return { success: false, error: "Invalid billing item id." };
+        return { success: false, message: "Invalid billing item ID." };
     }
 
 
@@ -319,7 +319,7 @@ async function updateBillingItemService (billing_item_id, updateField) {
         where: { billing_item_id }
     });
 
-    const refreshedItem = await BillingItem.findOne({ where: { billing_item_id } });
+    const refreshedItem = await BillingItem.findByPk(billing_item_id);
 
     const newTotal = await BillingItem.sum("subtotal", {
         where: { billing_id: refreshedItem.billing_id, is_deleted: false }

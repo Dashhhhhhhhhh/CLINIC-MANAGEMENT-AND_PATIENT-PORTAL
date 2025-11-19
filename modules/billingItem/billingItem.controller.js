@@ -5,7 +5,7 @@ async function createBillingItemController (req, res) {
     try {
 
     const { 
-      billing_id,
+      billing_id, 
       service_id, 
       description, 
       quantity, 
@@ -101,7 +101,7 @@ async function getItemByIdController (req, res) {
 
     return res.status(200).json({
       ...result,
-      item
+      billingItem: item
     });
 
 
@@ -127,8 +127,12 @@ async function updateBillingItemController (req, res) {
 
     const result = await updateBillingItemService(billing_item_id, updateField);
 
-    if (!result.success) return res.status(404).json(result);
-    
+      if(!result.success) {
+        if (result.message === "Billing not found") {
+        return  res.status(404).json(result);
+      }
+      return res.status(200).json(result);
+    }    
 
 
     return res.status(200).json(result);
@@ -159,11 +163,7 @@ async function toggleDeletebillingItemController (req, res) {
             return res.status(404).json(result);
         }       
 
-        return res.status(200).json({ 
-            success: true,
-            message: result.message,
-            data: result.data
-         });
+        return res.status(200).json(result);
 
 
     } catch (error) {
