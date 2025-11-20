@@ -4,21 +4,21 @@ const { Position, createPosition, getAllPositions, getPositionById, updatePositi
 async function createPositionService(position_name, active) {
 
     if (!position_name || !position_name.trim()) {
-      return res.status(400).json({
+      return {
         success: false,
         error: "Position name is required."
-      });
+      };
     }
 
     const cleanedPositionName = position_name.trim();
 
     if (cleanedPositionName.length > 50) {
-      return res.status(400).json({ success: false, error: "Position name must not exceed 50 characters." });
+      return { success: false, error: "Position name must not exceed 50 characters." };
     }
 
     const lettersOnlyRegex = /^[a-zA-Z\s]+$/;
     if (!lettersOnlyRegex.test(cleanedPositionName)) {
-      return res.status(400).json({ success: false, error: "Position name must contain only letters and spaces." });
+      return { success: false, error: "Position name must contain only letters and spaces." };
     }
 
     let isActive = true;

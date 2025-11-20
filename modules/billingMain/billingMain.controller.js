@@ -1,5 +1,6 @@
-const { createBillService, getAllBillingMainService, getBillingByIdService, toggleDeleteBillingService } = require("../billingMain/billingMain.service")
+const { createBillService, getAllBillingMainService, getBillingByIdService, toggleDeleteBillingService, finalizeBillingService } = require("../billingMain/billingMain.service")
 const { formatToPh } = require("../../utils/datetime");
+const { isValidUUID } = require("../../utils/security");
 
 async function createBillingController(req, res) {
   try {
@@ -129,7 +130,7 @@ async function finalizeBillingController (req, res) {
         return res.status(400).json({ success: false, message: "Invalid UUID" });
     }
 
-    const billing = await finali(billing_id, updated_by);
+    const billing = await finalizeBillingService(billing_id, updated_by);
 
     if (!billing.success) {
         if (billing.message === "Billing not found.") {
@@ -138,22 +139,24 @@ async function finalizeBillingController (req, res) {
         return res.status(400).json(billing);
     } 
 
-        const bill = result.billing;
+        const bill = billing.billing;
 
     bill.created_at = formatToPh(bill.created_at);
     bill.updated_at = formatToPh(bill.updated_at);
     if (bill.finalized_at) bill.finalized_at = formatToPh(bill.finalized_at);
 
-        return res.status(200).json(
-          ...result, 
-         bill);
+        return res.status(200).json(billing);
 
-    } catch (error) {
-        return res.status(error.status || 500).json({
-            success: false,
-            message: "Internal server error"
-        });
-    }
+  } catch (error) {
+    console.error("Error finalizing bill:", error);
+    if (error.errors) console.error(error.errors);
+    if (error.parent) console.error(error.parent);
+
+    return res.status(500).json({
+      success: false,
+      error: "Server error while finalizing bill"
+    });
+  }
 }
 
 module.exports = {

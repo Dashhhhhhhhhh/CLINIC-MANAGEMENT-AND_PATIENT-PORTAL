@@ -1,6 +1,6 @@
 const { isValidUUID } = require("../../utils/security");
 const { BillingService } = require("./billingService.model");
-const { getUTC, formatToPh } = require("../../utils/datetime");
+const { formatToPh } = require("../../utils/datetime");
 
 async function createBillingServiceService(service_name, description, default_price, category, is_active) {
 
@@ -13,7 +13,7 @@ async function createBillingServiceService(service_name, description, default_pr
         return { success: false, message: "Service name must be provided." };
     }
 
-    const existingServiceName = await BillingService.findOne({where: { service_name: trimServiceName }});
+    const existingServiceName = await BillingService.findOne({where: { service_name: trimServiceName, is_deleted: false }});
 
     if (existingServiceName) {
         return { success: false, message: "Service name already exist."};
@@ -40,21 +40,19 @@ async function createBillingServiceService(service_name, description, default_pr
         return { success: false, message: "Category must not exceed 50 characters."};
     }  
      
-
     const billingService = await BillingService.create({
         service_name: trimServiceName,
         description: trimDescription,
         default_price,
         category: trimCategory,
         is_active,
-        created_at: getUTC(),
-        updated_at: getUTC()
     });
+
 
     return {
         success: true,
         message: "Billing service created successfully.",
-        billingService: billingService
+        service: billingService.get({plain: true})
     };
 
 }
@@ -217,7 +215,7 @@ async function toggleDeleteServicService (service_id) {
 
     if(!service) return { success: false, message: "Service not found"};
 
-    service.updated_at = getUTC();
+    service.updated_at = formatToPh();
     service.is_deleted = !service.is_deleted;
     await service.save();
 

@@ -4,8 +4,12 @@ const saltRounds = 10;
 const { validate } = require("uuid");
 
 
-function generateToken(payload) {
-  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
+function generateToken({id, role_id}) {
+  return jwt.sign(
+    { id, role_id },
+    process.env.JWT_SECRET,
+    { expiresIn: "1hr" }
+  );
 }
 
 async function hashPassword(password) {

@@ -4,3 +4,7 @@ function formatToPh(date) {
         hour12: false
     });
 }
+
+module.exports = {
+    formatToPh
+}

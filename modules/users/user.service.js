@@ -68,7 +68,7 @@ async function registerAuthService(email, username, password, gender, role_id) {
                 id: user.id,
                 email: user.email,
                 username: user.username,
-                password_hash: hashPassword,
+                password_hash: user.password_hash,
                 gender: user.gender,
                 role_id: user.role_id,
                 active: user.active,
@@ -99,7 +99,7 @@ async function loginAuthService(username, password) {
             return { success: false, message: "Invalid username or password." };
         }
 
-        const token = generateToken({ id: user.id, role: user.role_id });
+        const token = generateToken({ id: user.id, role_id: user.role_id });
 
         return {
             success: true,

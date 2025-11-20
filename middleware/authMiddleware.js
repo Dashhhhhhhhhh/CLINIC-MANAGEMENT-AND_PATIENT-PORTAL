@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { Staff } = require("../modules/staff/staff.model");
+const { Role } = require("../modules/roles/roles.model");
 
 
 function authenticateJWT(req, res, next) {
@@ -17,12 +18,24 @@ function authenticateJWT(req, res, next) {
     }
 
     req.user = user;
+
+    //Check user role from DB
+
+    if (req.user.role_id === null || req.user.role_id === undefined) {
+      return next();
+    }
+
+    const role = await Role.findByPk(req.user.role_id);
+
+    if (!role) {
+      return res.status(403).json({ error: "Invalid role" });
+    }
     
-    if (req.user.role === "staff") {
+    if (role.role_name.toLowerCase() === "staff") {
       const staffRecord = await Staff.findOne({
-        where: { user_id: req.user.id }
+        where: { user_id: req.user.id}
       });
-     
+    
       if (!staffRecord) {
         return res.status(403).json({ error: "Forbidden ID."});
       }

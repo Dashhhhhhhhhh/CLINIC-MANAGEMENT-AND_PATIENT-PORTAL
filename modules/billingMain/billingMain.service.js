@@ -2,7 +2,9 @@ const { isValidUUID } = require("../../utils/security");
 const { Patient } = require("../patients/patients.model")
 const { Billing } = require("../billingMain/billingMain.model");
 const { Staff } = require("../staff/staff.model")
-const { getUTC } = require("../../utils/datetime");
+const { formatToPh } = require("../../utils/datetime");
+const { now } = require("moment-timezone");
+const { BillingItem } = require("../billingItem/billingItem.model");
 
 async function createBillService(patient_id, created_by) {
     
@@ -31,8 +33,8 @@ async function createBillService(patient_id, created_by) {
         total_amount,
         payment_status,
         created_by,
-        created_at: getUTC(),
-        updated_at: getUTC()
+        created_at: new Date (),
+        updated_at: new Date()
     });
     
     return {
@@ -61,12 +63,12 @@ async function getAllBillingMainService(is_deleted) {
         include: [
             {
                 model: Patient,
-                as: "patient",
+                as: "Patient",
                 attributes: ["patient_id", "first_name", "middle_initial", "last_name" ]
             },
             {
                 model: Staff,
-                as: "created_by_staff",
+                as: "Staff",
                 attributes: ["staff_id", "first_name", "last_name"],
             },
         ],
@@ -74,6 +76,7 @@ async function getAllBillingMainService(is_deleted) {
 
     return {
          success: true,
+         count: result.length,
          billingList: result.map(result => result.get({ plain: true }))
     };
 }
@@ -127,7 +130,7 @@ async function toggleDeleteBillingService (billing_id, updated_by) {
     if(!billing) return { success: false, message: "Billing not found." };
 
     billing.updated_by = updated_by;
-    billing.updated_at = getUTC();
+    billing.updated_at = formatToPh();
     billing.is_deleted = !billing.is_deleted;
     await billing.save();
 
@@ -162,7 +165,7 @@ async function finalizeBillingService(billing_id, updated_by) {
         if (existingBilling.finalized_at) {
             return { success: false, message: "Billing is already finalized cannot be modified."}
         }
-
+        
         const itemCount = await BillingItem.count({
             where: { billing_id, is_deleted: false }
         });
@@ -183,10 +186,10 @@ async function finalizeBillingService(billing_id, updated_by) {
             {
                 total_amount: total,
                 payment_status: "paid",
-                finalized_at: getUTC(),
+                finalized_at: new Date(),
                 finalized_by: updated_by,
                 updated_by: updated_by,
-                updated_at: getUTC()
+                updated_at: new Date()
             },
             { where: { billing_id }, returning: true }
         );

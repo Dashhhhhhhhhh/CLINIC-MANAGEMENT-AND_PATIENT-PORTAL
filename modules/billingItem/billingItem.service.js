@@ -2,22 +2,35 @@ const { Billing } = require("../billingMain/billingMain.model");
 const { BillingItem } = require("./billingItem.model");
 const { BillingService } = require("../billingService/billingService.model");
 const { isValidUUID } = require("../../utils/security");
-const { getUTC, formatToPh } = require("../../utils/datetime");
+const { formatToPh } = require("../../utils/datetime");
 const { Staff } = require("../staff/staff.model");
 
 
-async function createBillingItemService(billing_id, created_by, service_id, description, quantity, unit_price) {
+async function createBillingItemService(billing_id, service_id, description, quantity, unit_price, created_by) {
     
     const cleanBillingId = billing_id?.trim();
     const cleanCreatedByID = created_by?.trim();
     const cleanServiceId = service_id?.trim();
-    const trimDescription = description?.trim() || null;
+
+    let trimDescription = null;
+
+    if (typeof description === "string") {
+        trimDescription = description.trim();
+    }
+
+    if (description === null || description === undefined || description === "") {
+        trimDescription = null;
+    } else if (typeof description === "string") {
+        trimDescription = description.trim();
+    } else {
+        return { success: false, message: "Description must be a string"};
+    }
 
     if (!cleanCreatedByID || !isValidUUID(cleanCreatedByID)) {
         return { success: false, message: "Invalid or missing staff ID."};
     }
     
-    const existingCreatedBy = await Staff.findOne ({ where: { user_id: cleanCreatedByID }});
+    const existingCreatedBy = await Staff.findOne ({ where: { staff_id: cleanCreatedByID }});
 
     if(!existingCreatedBy) {
         return { success: false, message: "Invalid created by"};
@@ -43,19 +56,6 @@ async function createBillingItemService(billing_id, created_by, service_id, desc
         return { success: false, message: "Quantity cannot be negative." };
     }
     const normalizeQuantity = Number(quantity);
-    
-    const numPrice = Number(unit_price);
-    if (isNaN(numPrice)) {
-        return { success: false, message: "Unit price must be a valid number." };
-    }
-    if (Number(numPrice) < 0) {
-        return { success: false, message: "Unit price cannot be negative." };
-    }
-    const decimals = unit_price.toString().split(".")[1];
-    if (decimals && decimals.length > 2) {
-        return { success: false, message: "Unit price must have at most 2 deciamls please."};
-    }
-    const normalizeUnitPrice = numPrice;
 
     const billing = await Billing.findOne({
         where: { billing_id: cleanBillingId },
@@ -74,22 +74,34 @@ async function createBillingItemService(billing_id, created_by, service_id, desc
     }
 
     const service = await BillingService.findOne({
-        where: { service_id: cleanServiceId },
-        attributes: ["service_id", "is_deleted", "is_active"],
+    where: { service_id: cleanServiceId },
+    attributes: ["service_id", "is_deleted", "is_active", "default_price"],
     });
 
     if (!service) {
         return { success: false, message: "Billing service not found." };
     }
-    if (service.is_deleted === true) {
+    if (service.is_deleted) {
         return { success: false, message: "Cannot add item to deleted service." };
     }
     if (!service.is_active) {
         return { success: false, message: "Cannot add item to inactive service." };
     }
 
-    const roundedUnitPrice = parseFloat(numPrice.toFixed(2));
-    const computedSubTotal = parseFloat((normalizeQuantity * roundedUnitPrice).toFixed(2));
+    if (service.default_price === undefined || service.default_price === null) {
+        return { success: false, message: "Unit price is required." };
+    }
+
+    if (isNaN(service.default_price)) {
+        return { success: false, message: "Unit price must be a valid number." };
+    }
+
+    const default_price = Number(service.default_price);
+
+    const roundedUnitPrice = parseFloat(default_price.toFixed(2));
+    const computedSubTotal = parseFloat((normalizeQuantity * default_price).toFixed(2));
+
+    
 
     const item = await BillingItem.create({
         billing_id: cleanBillingId,
@@ -98,8 +110,8 @@ async function createBillingItemService(billing_id, created_by, service_id, desc
         quantity: normalizeQuantity,
         unit_price: roundedUnitPrice,
         subtotal: computedSubTotal,
-        created_by: existingCreatedBy.staff_id,
-        created_at: getUTC(),
+        created_by: cleanCreatedByID,
+        created_at: new Date(),
     });
 
 
@@ -114,6 +126,7 @@ async function createBillingItemService(billing_id, created_by, service_id, desc
         { total_amount: roundTotal },
         { where: { billing_id: cleanBillingId} }
     );
+
 
 
     return {
@@ -156,6 +169,7 @@ async function getAllItemService(is_deleted) {
 
     return {
         success: true,
+        count: billingItem.length,
         billingItem: billingItem.map(item=> item.get({ plain: true }))
     };
 }
@@ -192,6 +206,7 @@ async function getItemByIdService (billing_item_id) {
 
     return {
         success: true,
+        count: billingItem.length,
         billingItem: billingItem.get({ plain: true })
     }
 

@@ -1,5 +1,6 @@
 const { createBillingServiceService, getAllBillingServiceService, getBillingServiceByIdService, updateServiceService, toggleDeleteServicService} = require("../billingService/billingService.service");
 const { formatToPh } = require("../../utils/datetime");
+const { isValidUUID } = require("../../utils/security");
 
 async function createBillingServiceController (req, res) {
     try {
@@ -72,7 +73,7 @@ async function getBillingServiceByIdController (req, res) {
 
     const { service_id } = req.params;
 
-    if (!isValidUUID(iservice_idd)) {
+    if (!isValidUUID(service_id)) {
         return res.status(400).json({ success: false, error: "Invalid billing service ID." });
     }    
 
@@ -103,14 +104,19 @@ async function updateServiceController (req, res) {
 
     const updateField = req.body;
 
+    if (!isValidUUID(service_id)) {
+        return res.status(400).json({ success: false, error: "Invalid billing service ID." });
+    }  
+
     const result = await updateServiceService(service_id, updateField);
 
       if(!result.success) {
-        if (result.message === "Service not found") {
-        return  res.status(404).json(result);
+        if (result.message === "Service not found") return  res.status(404).json(result);
       }
-      return res.status(200).json(result);
-    }
+
+            return res.status(200).json(result);
+
+    
     
   } catch (err) {
     console.error("Error in updating Service controller", err);

@@ -23,16 +23,13 @@ async function createBillingItemController (req, res) {
       });
     }
 
-
    const result = await createBillingItemService(
-      billing_id, 
+      billing_id,
       service_id,
       description,
       quantity,
       unit_price,
-      sub_total,
-      created_by,
-      created_at
+      created_by
     );
 
     if(!result.success) return res.status(400).json(result);
@@ -78,12 +75,16 @@ async function getAllItemController (req, res){
           item: result.item
         });
 
-    } catch (error) {
-        return res.status(error.status || 500).json({
-            success: false,
-            message: "Internal server error"
-        });
-    }
+  } catch (error) {
+    console.error("Error Fetching bill item:", error);
+    if (error.errors) console.error(error.errors);
+    if (error.parent) console.error(error.parent);
+
+    return res.status(500).json({
+      success: false,
+      error: "Server error while creating bill"
+    });
+  }
 }
 
 async function getItemByIdController (req, res) {
