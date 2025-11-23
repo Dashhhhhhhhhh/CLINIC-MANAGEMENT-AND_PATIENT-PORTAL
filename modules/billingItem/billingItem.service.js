@@ -101,7 +101,6 @@ async function createBillingItemService(billing_id, service_id, description, qua
     const roundedUnitPrice = parseFloat(default_price.toFixed(2));
     const computedSubTotal = parseFloat((normalizeQuantity * default_price).toFixed(2));
 
-    
 
     const item = await BillingItem.create({
         billing_id: cleanBillingId,
@@ -206,7 +205,6 @@ async function getItemByIdService (billing_item_id) {
 
     return {
         success: true,
-        count: billingItem.length,
         billingItem: billingItem.get({ plain: true })
     }
 

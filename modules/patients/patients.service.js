@@ -27,13 +27,7 @@ async function registerPatientService(
 {
 
 
-console.log("SERVICE DATA:", {
-    street_name,
-    barangay_subdivision,
-    building_number,
-    city_municipality,
-    country
-});
+
 
         const update = {};
 
@@ -156,7 +150,7 @@ if (conditions !== undefined) {
                 .map(c => c.trim())
                 .filter(Boolean);
 
-            conditions = parsed; // overwrite
+            conditions = parsed; 
         } catch {
             return { success: false, message: "Invalid condition format." };
         }

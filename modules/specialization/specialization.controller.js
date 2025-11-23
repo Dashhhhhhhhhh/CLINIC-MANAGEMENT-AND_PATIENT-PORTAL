@@ -85,10 +85,10 @@ async function updateSpecializataionController (req, res) {
 
 async function toggleSpecializationStatusController(req, res) {
     try {
-        const { id } = req.params;
+        const { specialization_id } = req.params;
         const { active } = req.body;
 
-        const result = await toggleSpecializationStatusService(id, active);
+        const result = await toggleSpecializationStatusService(specialization_id, active);
 
         if(!result.success) return res.status(404).json(result);
 

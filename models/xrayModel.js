@@ -1,6 +1,6 @@
 const { DataTypes } = require("sequelize");
 const  sequelize = require("../db");
-const { Result } = require("./resultModel");
+const { Result } = require("../modules/results/result.model");
 
 const Xray = sequelize.define(
   "Xray",

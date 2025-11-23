@@ -1,5 +1,5 @@
 const { DataTypes, DATE } = require("sequelize");
-const sequelize = require("../db");
+const sequelize = require("../../db");
 
 const Result = sequelize.define(
   "Result",
@@ -72,6 +72,13 @@ const Result = sequelize.define(
       allowNull: false,
       defaultValue: false,
     },
+    billing_item_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+        references: {
+          model: { tableName: "billing_item", schema: "billing_table"},
+        }
+    }
   },
   {
     tableName: "results",
@@ -93,7 +100,8 @@ async function createResult(data) {
         initial_result_at: data.initial_result_at,
         initial_result_by: data.initial_result_by,
         final_result_at: data.final_result_at,
-        final_result_by: data.final_result_by
+        final_result_by: data.final_result_by,
+        billing_item_id: data.billing_item_id
     });
 }
 

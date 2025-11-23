@@ -34,10 +34,10 @@ async function createBillingItemController (req, res) {
 
     if(!result.success) return res.status(400).json(result);
 
-    const item = result.item;
+    const data = result.item;
     
-    item.created_at = formatToPh(item.created_at);
-    item.updated_at = formatToPh(item.updated_at);
+    data.created_at = formatToPh(data.created_at);
+    data.updated_at = formatToPh(data.updated_at);
 
 
     return res.status(201).json({
@@ -76,13 +76,13 @@ async function getAllItemController (req, res){
         });
 
   } catch (error) {
-    console.error("Error Fetching bill item:", error);
+    console.error("Error fetching item:", error);
     if (error.errors) console.error(error.errors);
     if (error.parent) console.error(error.parent);
 
     return res.status(500).json({
       success: false,
-      error: "Server error while creating bill"
+      error: "Server error while fetching item"
     });
   }
 }
@@ -101,19 +101,19 @@ async function getItemByIdController (req, res) {
       item.updated_at = formatToPh(item.updated_at);
 
     return res.status(200).json({
-      ...result,
+      success: true,
       billingItem: item
     });
 
 
   } catch (error) {
-    console.error("Error creating bill:", error);
+    console.error("Error fetching item:", error);
     if (error.errors) console.error(error.errors);
     if (error.parent) console.error(error.parent);
 
     return res.status(500).json({
       success: false,
-      error: "Server error while creating bill"
+      error: "Server error while fetching item"
     });
   }
 }

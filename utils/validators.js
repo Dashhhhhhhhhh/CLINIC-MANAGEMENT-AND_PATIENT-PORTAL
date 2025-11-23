@@ -75,21 +75,18 @@ function validatePhoneNumber(number) {
     }
 }
 
-function validateDate(date, allowFuture = false) {
-  if (!date) {
-    return { valid: false, error: "Date is required." };
-  }
 
-  const isValidFormat = /^\d{4}-\d{2}-\d{2}$/.test(date);
-  const parsedDate = new Date(date);
 
-  if (!isValidFormat || isNaN(parsedDate.getTime())) {
-    return { valid: false, error: "Date must be in YYYY-MM-DD format." };
-  }
+function validateDate(input) {
+  if (input === undefined || input === null) return null;
 
-  if (!allowFuture && parsedDate > new Date()) {
-    return { valid: false, error: "Date cannot be in the future." };
-  }
+  const cleaned = typeof input === "string" ? input.trim() : input;
 
-  return { valid: true, value: date };
+  const parsed = new Date (cleaned);
+
+  if (isNaN(parsed.getTime())) return null;
+  
+  return parsed;
 }
+
+module.exports = { validateDate };

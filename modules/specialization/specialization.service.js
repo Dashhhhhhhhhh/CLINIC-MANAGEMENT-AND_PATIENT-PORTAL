@@ -50,7 +50,7 @@ async function createSpecializationService (specialization_name, description, ac
 
     return {
         success: true,
-        message: "specialization created successfully.",
+        message: "Specialization created successfully.",
         specialization: specialization
     };
 
@@ -74,7 +74,7 @@ async function getAllSpecializationService (active) {
 
     return {
         success: true,
-        message: result.length,
+        count: result.length,
         specialization: result.map(special => special.get({ plain: true}))  
     };
 }
@@ -118,6 +118,7 @@ async function updateSpecializationService(specialization_id, updateField) {
             trimmed = value.trim();
         } else if (typeof value === 'number') {
             if(isNaN(value) || value < 0) continue;
+                rimmed = value;
         } else if(typeof value === 'boolean') {
             trimmed = value;
         } else {
@@ -139,7 +140,7 @@ async function updateSpecializationService(specialization_id, updateField) {
             }
         }
 
-    if (!update || Object.keys(update).length === 0) return { success: false, message: "No fields provided to update" };
+    if (Object.keys(update).length === 0) return { success: false, message: "No fields provided to update" };
    
     const specialization = await Specialization.update(update, {
         where: { specialization_id: specialization_id }
@@ -150,7 +151,7 @@ async function updateSpecializationService(specialization_id, updateField) {
     return {
         success:true,
         message: "Specialization updated successfully.",
-        specialization: refreshSpecialization
+        specialization: refreshSpecialization.get({ plain: true })
     };
 }
 
@@ -167,7 +168,7 @@ async function toggleSpecializationStatusService (specialization_id, active) {
             success: false,
             message: active
                 ? "Specialization is already active"
-                : "Specialization is alreadyinactive"
+                : "Specialization is already inactive"
         }
     };
 
@@ -188,7 +189,7 @@ async function getSpecializationService() {
     return {
         success: true,
         specialization: existingSpecialization
-    }
+    };
 }
 
 
