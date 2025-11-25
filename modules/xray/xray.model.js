@@ -1,9 +1,9 @@
-const { DataTypes } = require("sequelize");
-const  sequelize = require("../db");
-const { Result } = require("../modules/results/result.model");
+const { DataTypes, DATE } = require('sequelize');
+const sequelize = require('../../db');
+const { Result } = require('../results/result.model');
 
 const Xray = sequelize.define(
-  "Xray",
+  'Xray',
   {
     xray_id: {
       type: DataTypes.UUID,
@@ -14,8 +14,8 @@ const Xray = sequelize.define(
       type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: "results",
-        key: "result_id",
+        model: 'results',
+        key: 'result_id',
       },
     },
     xray_type: {
@@ -53,16 +53,15 @@ const Xray = sequelize.define(
     },
   },
   {
-    tableName: "xray",
-    schema: "lab_results",
+    tableName: 'xray',
+    schema: 'lab_results',
     timestamps: true,
-    createdAt: "created_at",
-    updatedAt: "updated_at",
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
   }
 );
 
 async function createXray(data) {
-  
   return await Xray.create({
     result_id: data.result_id,
     xray_type: data.xray_type,
@@ -72,11 +71,10 @@ async function createXray(data) {
     findings: data.findings,
     impression: data.impression,
     remarks: data.remarks,
-  })
+  });
 }
 
 async function getAllXray() {
-
   return await Xray.findAll({
     attributes: [
       'xray_id',
@@ -89,14 +87,13 @@ async function getAllXray() {
       'impression',
       'remarks',
     ],
-    order: [["created_at", "Desc"]],
-  })
+    order: [['created_at', 'Desc']],
+  });
 }
 
 async function getXrayById(id) {
-  
   return await Xray.findOne({
-    where: { result_id: id},
+    where: { result_id: id },
     attributes: [
       'xray_id',
       'result_id',
@@ -108,60 +105,54 @@ async function getXrayById(id) {
       'impression',
       'remarks',
     ],
-  })
+  });
 }
 
 async function updateXrayResult(id, updateFields) {
+  if (!updateFields || Object.keys(updateFields).length === 0) return null;
+  const [updateCount] = await Xray.update(updateFields, {
+    where: { result_id: id },
+  });
 
-    if (!updateFields || Object.keys(updateFields).length === 0) return null;
-    const [updateCount] = await Xray.update(updateFields, {
-        where: { result_id: id },
-    });
+  if (!updateCount) return null;
 
-    if (!updateCount) return null;
-
-    return await Xray.findOne({
-      where: {result_id: id },
-      attributes: [
-        'xray_id',
-        'result_id',
-        'xray_type',
-        'history',
-        'comparison',
-        'technique',
-        'findings',
-        'impression',
-        'remarks',
-      ],
-    })
+  return await Xray.findOne({
+    where: { result_id: id },
+    attributes: [
+      'xray_id',
+      'result_id',
+      'xray_type',
+      'history',
+      'comparison',
+      'technique',
+      'findings',
+      'impression',
+      'remarks',
+    ],
+  });
 }
 
 async function toggleDeleteXrayResult(id) {
- 
-  const xray = await Xray.findOne({ 
+  const xray = await Xray.findOne({
     where: { result_id: id },
-    include: { model: Result, attributes: [ "result_id", "is_deleted"]},
-    }); 
+    include: { model: Result, attributes: ['result_id', 'is_deleted'] },
+  });
 
   if (!xray) return null;
 
   const newDeleteStatus = !xray.Result.is_deleted;
 
-  await Result.update({ is_deleted: newDeleteStatus },
-    { where: { result_id: xray.result_id } }
-  );
+  await Result.update({ is_deleted: newDeleteStatus }, { where: { result_id: xray.result_id } });
 
   xray.Result.is_deleted = newDeleteStatus;
   return xray;
 }
 
-
-
-module.exports = { 
+module.exports = {
   Xray,
   createXray,
   getAllXray,
   getXrayById,
   updateXrayResult,
-  toggleDeleteXrayResult
+  toggleDeleteXrayResult,
 };

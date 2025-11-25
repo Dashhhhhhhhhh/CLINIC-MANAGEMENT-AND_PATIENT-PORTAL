@@ -1,5 +1,12 @@
-const { isValidUUID } = require("../utils/security");
-const { Urinalysis, createUrinalysis, getAllUrinalysisResult, getAllUrinalysisResultbyId, updateUrinalysisResult, toggleDeleteUrinalysisResult } = require("../models/urinalysisModel");
+const { isValidUUID } = require('../utils/security');
+const {
+  Urinalysis,
+  createUrinalysis,
+  getAllUrinalysisResult,
+  getAllUrinalysisResultbyId,
+  updateUrinalysisResult,
+  toggleDeleteUrinalysisResult,
+} = require('../models/urinalysisModel');
 
 async function createUrinalysisController(req, res) {
   try {
@@ -46,11 +53,11 @@ async function createUrinalysisController(req, res) {
       renal_cells,
       pregnancy_test,
       others,
-      notes
+      notes,
     } = req.body;
 
     if (!result_id || !isValidUUID(result_id)) {
-      return res.status(400).json({ message: "Invalid or missing result_id" });
+      return res.status(400).json({ message: 'Invalid or missing result_id' });
     }
 
     const cleanedData = {
@@ -96,20 +103,20 @@ async function createUrinalysisController(req, res) {
       renal_cells: renal_cells?.trim() || null,
       pregnancy_test: pregnancy_test?.trim() || null,
       others: others?.trim() || null,
-      notes: notes?.trim() || null
+      notes: notes?.trim() || null,
     };
 
     if (specific_gravity && isNaN(Number(specific_gravity))) {
       return res.status(400).json({
         success: false,
-        error: "Specific gravity must be a valid number."
+        error: 'Specific gravity must be a valid number.',
       });
     }
 
     if (ph_level && isNaN(Number(ph_level))) {
       return res.status(400).json({
         success: false,
-        error: "pH level must be a valid number."
+        error: 'pH level must be a valid number.',
       });
     }
 
@@ -118,198 +125,184 @@ async function createUrinalysisController(req, res) {
 
     return res.status(201).json({
       success: true,
-      message: "Urinalysis result created successfully.",
-      result: newUrinalysisResult
+      message: 'Urinalysis result created successfully.',
+      result: newUrinalysisResult,
     });
-
   } catch (error) {
-    console.error("Error creating urinalysis result:", error.message);
+    console.error('Error creating urinalysis result:', error.message);
     if (error.errors) console.error(error.errors);
     if (error.parent) console.error(error.parent);
     return res.status(500).json({
       success: false,
-      error: "Server error while creating urinalysis result."
+      error: 'Server error while creating urinalysis result.',
     });
   }
 }
 
-async function getAllUrinalysisResultController(req, res){ 
-    try {
+async function getAllUrinalysisResultController(req, res) {
+  try {
+    const urinalysisresult = await getAllUrinalysisResult();
 
-        const urinalysisresult = await getAllUrinalysisResult();
-    
-        return res.status(200).json({
-            success: true,
-            count: urinalysisresult.length,
-            urinalysisresult
-        });
-
+    return res.status(200).json({
+      success: true,
+      count: urinalysisresult.length,
+      urinalysisresult,
+    });
   } catch (err) {
-    console.error("Error fetching urinalysis results:", err);
-    return res.status(500).json({ success: false, error: "Internal server error" });
+    console.error('Error fetching urinalysis results:', err);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 }
 
 async function getAllUrinalysisByIdController(req, res) {
-    try {
-
-    const {id } = req.params;
+  try {
+    const { id } = req.params;
 
     if (!isValidUUID(id)) {
-        return res.status(400).json({ success: false, error: "Invalid UUID" });
+      return res.status(400).json({ success: false, error: 'Invalid UUID' });
     }
 
     const urinalysis = await getAllUrinalysisResultbyId(id);
 
     if (!urinalysis) {
-      return res.status(404).json({ success: false, error: "urinalysis result not found" });
+      return res.status(404).json({ success: false, error: 'urinalysis result not found' });
     }
 
     return res.status(200).json({ success: true, urinalysis });
-
   } catch (err) {
-    console.error("Error in getting urinalysis result by ID:", err);
-    return res.status(500).json({ success: false, error: "Internal server error" });
+    console.error('Error in getting urinalysis result by ID:', err);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 }
 
 async function updateUrinalysisResultController(req, res) {
-    try { 
-
-        const { id } =  req.params;
+  try {
+    const { id } = req.params;
 
     if (!isValidUUID(id)) {
-      return res.status(400).json({ success: false, error: "Invalid UUID" });
+      return res.status(400).json({ success: false, error: 'Invalid UUID' });
     }
 
     const update = {};
 
-    const allowedFields =  [
-            "color",
-            "transparency",
-            "leukocytes",
-            "ketone",
-            "nitrite",
-            "urobilinogen",
-            "bilirubin",
-            "glucose",
-            "protein",
-            "specific_gravity",
-            "ph_level",
-            "blood",
-            "vitamin_c",
-            "microalbumin",
-            "calcium",
-            "ascorbic_acid",
-            "pus_cells",
-            "rbc",
-            "epithelial_cells",
-            "mucus_threads",
-            "bacteria",
-            "yeast_cells",
-            "hyaline_cast",
-            "wbc_cast",
-            "rbc_cast",
-            "coarse_granular_cast",
-            "fine_granular_cast",
-            "waxy_cast",
-            "other_casts",
-            "amorphous_urates",
-            "amorphous_phosphates",
-            "calcium_oxalate",
-            "calcium_carbonate",
-            "uric_acid_crystals",
-            "triple_phosphates",
-            "cystine",
-            "clue_cells",
-            "trichomonas_vaginalis",
-            "renal_cells",
-            "pregnancy_test",
-            "others",
-            "notes"
-            ];    
+    const allowedFields = [
+      'color',
+      'transparency',
+      'leukocytes',
+      'ketone',
+      'nitrite',
+      'urobilinogen',
+      'bilirubin',
+      'glucose',
+      'protein',
+      'specific_gravity',
+      'ph_level',
+      'blood',
+      'vitamin_c',
+      'microalbumin',
+      'calcium',
+      'ascorbic_acid',
+      'pus_cells',
+      'rbc',
+      'epithelial_cells',
+      'mucus_threads',
+      'bacteria',
+      'yeast_cells',
+      'hyaline_cast',
+      'wbc_cast',
+      'rbc_cast',
+      'coarse_granular_cast',
+      'fine_granular_cast',
+      'waxy_cast',
+      'other_casts',
+      'amorphous_urates',
+      'amorphous_phosphates',
+      'calcium_oxalate',
+      'calcium_carbonate',
+      'uric_acid_crystals',
+      'triple_phosphates',
+      'cystine',
+      'clue_cells',
+      'trichomonas_vaginalis',
+      'renal_cells',
+      'pregnancy_test',
+      'others',
+      'notes',
+    ];
 
     for (const field of allowedFields) {
-        let value = req.body[field];
-    
-        if (value === null || value === undefined) continue;
+      let value = req.body[field];
 
-        let trimmed =value;
+      if (value === null || value === undefined) continue;
 
-        if (typeof value === 'string') {
-            trimmed = value.trim()
-        } else if (typeof value === 'number') {
-          if (!isNaN(Number(value))) {
-            trimmed = value;
-          } else {
-            continue;
-          }
+      let trimmed = value;
+
+      if (typeof value === 'string') {
+        trimmed = value.trim();
+      } else if (typeof value === 'number') {
+        if (!isNaN(Number(value))) {
+          trimmed = value;
+        } else {
+          continue;
         }
-       update[field] = trimmed;   
-     }
+      }
+      update[field] = trimmed;
+    }
 
     if (Object.keys(update).length === 0) {
-        return res.status(400).json({ success: false, error: "No fields provided for update." });
+      return res.status(400).json({ success: false, error: 'No fields provided for update.' });
     }
 
     const updateUrinalysis = await updateUrinalysisResult(id, update);
 
     if (!updateUrinalysis) {
-      return res.status(400).json({ success: false, error: "Urinalysis result not found" });
+      return res.status(400).json({ success: false, error: 'Urinalysis result not found' });
     }
 
-    return res.status(200).json({ 
+    return res.status(200).json({
       success: true,
-      message: "Urinalysis result updated.",
-      updateUrinalysis
+      message: 'Urinalysis result updated.',
+      updateUrinalysis,
     });
-  
-
   } catch (err) {
-    console.error("Error in updateUrinalysisController", err);
+    console.error('Error in updateUrinalysisController', err);
     return res.status(500).json({
       success: false,
-      error: "Internal server error."
+      error: 'Internal server error.',
     });
   }
 }
 
-async function toggleDeletedUrinalysisResultController (req, res) {
+async function toggleDeletedUrinalysisResultController(req, res) {
   try {
-
     const { id } = req.params;
 
     if (!isValidUUID(id)) {
-        return res.status(400).json({ success: false, error: "Invalid UUID" });
+      return res.status(400).json({ success: false, error: 'Invalid UUID' });
     }
 
     const result = await toggleDeleteUrinalysisResult(id);
 
     if (!result) {
-      return res.status(400).json({ success: false, error: "Result not found."});
+      return res.status(400).json({ success: false, error: 'Result not found.' });
     }
 
-
-    return res.status(200).json({ 
-        success: true,
-        message: result.is_deleted
-            ? "Result deleted."
-            : "Result restored.",
-        result,
+    return res.status(200).json({
+      success: true,
+      message: result.is_deleted ? 'Result deleted.' : 'Result restored.',
+      result,
     });
-
   } catch (err) {
-    console.error("Error in toggleDeleteUrinalysisResultController:", err);
-    return res.status(500).json({ success: false, error: "Internal server error" });
+    console.error('Error in toggleDeleteUrinalysisResultController:', err);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 }
 
-
-module.exports = { 
-    Urinalysis,
-    createUrinalysisController,
-    getAllUrinalysisResultController,
-    getAllUrinalysisByIdController,
-    updateUrinalysisResultController,
-    toggleDeletedUrinalysisResultController
- };
+module.exports = {
+  Urinalysis,
+  createUrinalysisController,
+  getAllUrinalysisResultController,
+  getAllUrinalysisByIdController,
+  updateUrinalysisResultController,
+  toggleDeletedUrinalysisResultController,
+};

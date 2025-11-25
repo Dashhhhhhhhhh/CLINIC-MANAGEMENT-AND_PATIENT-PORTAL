@@ -2,11 +2,11 @@ const express = require('express');
 const router = express.Router();
 
 const {
-    createBillingServiceController,
-    getAllBillingServiceController,
-    getBillingServiceByIdController,
-    updateServiceController,
-    toggleDeleteServiceController
+  createBillingServiceController,
+  getAllBillingServiceController,
+  getBillingServiceByIdController,
+  updateServiceController,
+  toggleDeleteServiceController,
 } = require('../billingService/billingService.controller');
 
 router.post('/', createBillingServiceController);

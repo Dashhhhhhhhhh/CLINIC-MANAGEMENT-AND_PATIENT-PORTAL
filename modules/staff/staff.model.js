@@ -1,11 +1,10 @@
-const sequelize = require("../../db");
-const { DataTypes } = require("sequelize");
-const { Position } = require("../positions/position.model");
-const { User } = require("../users/user.model");
-
+const sequelize = require('../../db');
+const { DataTypes } = require('sequelize');
+const { Position } = require('../positions/position.model');
+const { User } = require('../users/user.model');
 
 const Staff = sequelize.define(
-  "Staff",
+  'Staff',
   {
     staff_id: {
       type: DataTypes.UUID,
@@ -47,14 +46,13 @@ const Staff = sequelize.define(
     },
   },
   {
-    tableName: "staff",
-    schema: "users_table",
+    tableName: 'staff',
+    schema: 'users_table',
     timestamps: true,
-    createdAt: "created_at",
-    updatedAt: "updated_at",
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
   }
 );
-
 
 async function createStaff(data) {
   return await Staff.create({
@@ -71,7 +69,7 @@ async function createStaff(data) {
 
 async function getAllStaff(active, position_id) {
   const where = {};
-  if (typeof active === "boolean") where.active = active;
+  if (typeof active === 'boolean') where.active = active;
   if (position_id) where.position_id = position_id;
 
   return await Staff.findAll({
@@ -79,25 +77,25 @@ async function getAllStaff(active, position_id) {
     include: [
       {
         model: Position,
-        as: "position",
-        attributes: ["position_id", "position_name"],
+        as: 'position',
+        attributes: ['position_id', 'position_name'],
       },
       {
         model: User,
-        as: "user",
-        attributes: ["id", "username", "email"],
+        as: 'user',
+        attributes: ['id', 'username', 'email'],
       },
     ],
     attributes: [
-      "staff_id",
-      "first_name",
-      "middle_initial",
-      "last_name",
-      "employee_number",
-      "contact_number",
-      "active",
+      'staff_id',
+      'first_name',
+      'middle_initial',
+      'last_name',
+      'employee_number',
+      'contact_number',
+      'active',
     ],
-    order: [["created_at", "DESC"]],
+    order: [['created_at', 'DESC']],
   });
 }
 
@@ -106,23 +104,23 @@ async function getStaffById(id) {
     include: [
       {
         model: Position,
-        as: "position",
-        attributes: ["position_id", "position_name"],
+        as: 'position',
+        attributes: ['position_id', 'position_name'],
       },
       {
         model: User,
-        as: "user",
-        attributes: ["id", "username", "email"],
+        as: 'user',
+        attributes: ['id', 'username', 'email'],
       },
     ],
     attributes: [
-      "staff_id",
-      "first_name",
-      "middle_initial",
-      "last_name",
-      "employee_number",
-      "contact_number",
-      "active",
+      'staff_id',
+      'first_name',
+      'middle_initial',
+      'last_name',
+      'employee_number',
+      'contact_number',
+      'active',
     ],
   });
 }

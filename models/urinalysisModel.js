@@ -1,9 +1,9 @@
-const { DataTypes } = require("sequelize");
-const sequelize = require("../db");
-const { Result } = require("../modules/results/result.model");
+const { DataTypes } = require('sequelize');
+const sequelize = require('../db');
+const { Result } = require('../modules/results/result.model');
 
 const Urinalysis = sequelize.define(
-  "Urinalysis",
+  'Urinalysis',
   {
     urinalysis_id: {
       type: DataTypes.UUID,
@@ -14,8 +14,8 @@ const Urinalysis = sequelize.define(
       type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: "results",
-        key: "result_id",
+        model: 'results',
+        key: 'result_id',
       },
     },
 
@@ -71,17 +71,17 @@ const Urinalysis = sequelize.define(
     is_deleted: { type: DataTypes.BOOLEAN, allowNull: true },
   },
   {
-    tableName: "urinalysis",
-    schema: "lab_results",
+    tableName: 'urinalysis',
+    schema: 'lab_results',
     timestamps: true,
-    createdAt: "created_at",
-    updatedAt: "updated_at",
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
   }
 );
 
 // 🔗 Association
-Result.hasOne(Urinalysis, { foreignKey: "result_id" });
-Urinalysis.belongsTo(Result, { foreignKey: "result_id" });
+Result.hasOne(Urinalysis, { foreignKey: 'result_id' });
+Urinalysis.belongsTo(Result, { foreignKey: 'result_id' });
 
 // 🧩 Controller Functions
 
@@ -135,92 +135,89 @@ async function createUrinalysis(data) {
 
 async function getAllUrinalysisResult() {
   return await Urinalysis.findAll({
-    attributes: { exclude: ["is_deleted"] },
-    order: [["created_at", "DESC"]],
+    attributes: { exclude: ['is_deleted'] },
+    order: [['created_at', 'DESC']],
   });
 }
 
-
-
 async function getAllUrinalysisResultbyId(id) {
-    return await Urinalysis.findOne({
+  return await Urinalysis.findOne({
     where: { result_id: id },
-    attributes: { exclude: ["is_deleted"] },
-    });
+    attributes: { exclude: ['is_deleted'] },
+  });
 }
 
 async function updateUrinalysisResult(id, updateFields) {
-    
-    if (!updateFields || Object.keys(updateFields).length === 0) return null;
-    const [updateCount] = await Urinalysis.update(updateFields, {
-        where: { result_id: id },
-    });
+  if (!updateFields || Object.keys(updateFields).length === 0) return null;
+  const [updateCount] = await Urinalysis.update(updateFields, {
+    where: { result_id: id },
+  });
 
-    if (!updateCount) return null;
+  if (!updateCount) return null;
 
-return await Urinalysis.findOne({
-  where: { result_id: id },
-  attributes: [
-    "urinalysis_id",
-    "result_id",
-    "color",
-    "transparency",
-    "leukocytes",
-    "ketone",
-    "nitrite",
-    "urobilinogen",
-    "bilirubin",
-    "glucose",
-    "protein",
-    "specific_gravity",
-    "ph",
-    "blood",
-    "vitamin_c",
-    "microalbumin",
-    "calcium",
-    "ascorbic_acid",
-    "pus_cells",
-    "rbc",
-    "epithelial_cells",
-    "mucus_threads",
-    "bacteria",
-    "yeast_cells",
-    "hyaline_cast",
-    "wbc_cast",
-    "rbc_cast",
-    "coarse_granular_cast",
-    "fine_granular_cast",
-    "waxy_cast",
-    "other_cast",
-    "amorphous_urates",
-    "amorphous_phosphates",
-    "calcium_oxalate",
-    "calcium_carbonate",
-    "uric_acid_crystals",
-    "triple_phosphates",
-    "cystine",
-    "clue_cells",
-    "trichomonas_vaginalis",
-    "renal_cells",
-    "pregnancy_tests",
-    "others",
-    "notes"
-  ],
-});
+  return await Urinalysis.findOne({
+    where: { result_id: id },
+    attributes: [
+      'urinalysis_id',
+      'result_id',
+      'color',
+      'transparency',
+      'leukocytes',
+      'ketone',
+      'nitrite',
+      'urobilinogen',
+      'bilirubin',
+      'glucose',
+      'protein',
+      'specific_gravity',
+      'ph',
+      'blood',
+      'vitamin_c',
+      'microalbumin',
+      'calcium',
+      'ascorbic_acid',
+      'pus_cells',
+      'rbc',
+      'epithelial_cells',
+      'mucus_threads',
+      'bacteria',
+      'yeast_cells',
+      'hyaline_cast',
+      'wbc_cast',
+      'rbc_cast',
+      'coarse_granular_cast',
+      'fine_granular_cast',
+      'waxy_cast',
+      'other_cast',
+      'amorphous_urates',
+      'amorphous_phosphates',
+      'calcium_oxalate',
+      'calcium_carbonate',
+      'uric_acid_crystals',
+      'triple_phosphates',
+      'cystine',
+      'clue_cells',
+      'trichomonas_vaginalis',
+      'renal_cells',
+      'pregnancy_tests',
+      'others',
+      'notes',
+    ],
+  });
 }
 
 async function toggleDeleteUrinalysisResult(id) {
-  
-    const urinalysis = await Urinalysis.findOne({ 
-        where: { result_id: id },
-        include: { model: Result, attributes: [ "result_id", "is_deleted"] },
-    }); 
+  const urinalysis = await Urinalysis.findOne({
+    where: { result_id: id },
+    include: { model: Result, attributes: ['result_id', 'is_deleted'] },
+  });
 
-    if (!urinalysis) return null;
+  if (!urinalysis) return null;
 
-    const newDeleteStatus = !urinalysis.Result.is_deleted;
+  const newDeleteStatus = !urinalysis.Result.is_deleted;
 
-  await Result.update({ is_deleted: newDeleteStatus },
+  await Result.update(
+    { is_deleted: newDeleteStatus },
     { where: { result_id: urinalysis.result_id } }
   );
 
@@ -229,10 +226,10 @@ async function toggleDeleteUrinalysisResult(id) {
 }
 
 module.exports = {
-    Urinalysis,
-    createUrinalysis,
-    getAllUrinalysisResult,
-    getAllUrinalysisResultbyId,
-    updateUrinalysisResult,
-    toggleDeleteUrinalysisResult
+  Urinalysis,
+  createUrinalysis,
+  getAllUrinalysisResult,
+  getAllUrinalysisResultbyId,
+  updateUrinalysisResult,
+  toggleDeleteUrinalysisResult,
 };

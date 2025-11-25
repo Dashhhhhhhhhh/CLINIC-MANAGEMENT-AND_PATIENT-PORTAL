@@ -1,4 +1,4 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 const {
   createUltrasoundController,
@@ -6,12 +6,12 @@ const {
   getUltrasoundByIdController,
   uptdateUltrasoundResultController,
   toggleDeleteUltrasoundResultController,
-} = require("../controllers/ultrasoundController");
+} = require('../controllers/ultrasoundController');
 
-router.post("/", createUltrasoundController);
-router.get("/", getAllUltrasoundController);
-router.get("/:id", getUltrasoundByIdController);
-router.patch("/:id", uptdateUltrasoundResultController);
-router.patch("/:id/toggle-delete", toggleDeleteUltrasoundResultController);
+router.post('/', createUltrasoundController);
+router.get('/', getAllUltrasoundController);
+router.get('/:id', getUltrasoundByIdController);
+router.patch('/:id', uptdateUltrasoundResultController);
+router.patch('/:id/toggle-delete', toggleDeleteUltrasoundResultController);
 
 module.exports = router;

@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
 
-const authenticateJWT = require("../../middleware/authMiddleware");
+const authenticateJWT = require('../../middleware/authMiddleware');
 
 const {
-    createBillingItemController,
-    getAllItemController,
-    getItemByIdController,
-    updateBillingItemController,
-    toggleDeletebillingItemController,
+  createBillingItemController,
+  getAllItemController,
+  getItemByIdController,
+  updateBillingItemController,
+  toggleDeletebillingItemController,
 } = require('../billingItem/billingItem.controller');
 
 router.post('/', authenticateJWT, createBillingItemController);

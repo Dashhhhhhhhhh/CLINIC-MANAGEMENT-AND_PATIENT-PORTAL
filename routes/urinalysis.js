@@ -2,11 +2,11 @@ const express = require('express');
 const router = express.Router();
 
 const {
-    createUrinalysisController,
-    getAllUrinalysisResultController,
-    getAllUrinalysisByIdController,
-    updateUrinalysisResultController,
-    toggleDeletedUrinalysisResultController
+  createUrinalysisController,
+  getAllUrinalysisResultController,
+  getAllUrinalysisByIdController,
+  updateUrinalysisResultController,
+  toggleDeletedUrinalysisResultController,
 } = require('../controllers/urinalysisController');
 
 router.post('/', createUrinalysisController);

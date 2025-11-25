@@ -1,127 +1,116 @@
-const { createSpecializationService, getAllSpecializationService, getSpecializationByIdService, updateSpecializationService, toggleSpecializationStatusService, getSpecializationService } = require('./specialization.service');
+const {
+  createSpecializationService,
+  getAllSpecializationService,
+  getSpecializationByIdService,
+  updateSpecializationService,
+  toggleSpecializationStatusService,
+  getSpecializationService,
+} = require('./specialization.service');
 
 async function createSpecializationController(req, res) {
   try {
     const { specialization_name, description, active } = req.body;
 
-    const result = await createSpecializationService(
-        specialization_name,
-        description,
-        active
-    );
+    const result = await createSpecializationService(specialization_name, description, active);
 
-    if(!result.success) return res.status(400).json(result);
+    if (!result.success) return res.status(400).json(result);
 
     return res.status(201).json(result);
-
-
   } catch (err) {
-    console.error("Error creating staff:", err);
+    console.error('Error creating staff:', err);
 
-    if (err.name === "SequelizeUniqueConstraintError") {
+    if (err.name === 'SequelizeUniqueConstraintError') {
       return res.status(409).json({
         success: false,
-        error: "Specialization already exists.",
+        error: 'Specialization already exists.',
       });
     }
 
     return res.status(500).json({
       success: false,
-      error: "Internal server error.",
+      error: 'Internal server error.',
     });
   }
 }
 
 async function getAllSpecializationController(req, res) {
-    try {
+  try {
+    const { active } = req.query;
 
-        const { active } = req.query;
+    const result = await getAllSpecializationService();
 
-        const result = await getAllSpecializationService();
-
-        return res.status(200).json(result);
-
+    return res.status(200).json(result);
   } catch (err) {
-    console.error("Error in getAllDcotorsController:", err);
-    return res.status(500).json({ success: false, error: "Internal server error" });
+    console.error('Error in getAllDcotorsController:', err);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 }
 
 async function getSpecializationByIdController(req, res) {
-    try {
+  try {
+    const { specialization_id } = req.params;
 
-        const { specialization_id  } = req.params;
+    const result = await getSpecializationByIdService(specialization_id);
 
-        const result = await getSpecializationByIdService(specialization_id);
+    if (!result.success) return res.status(404).json(result);
 
-        if(!result.success) return res.status(404).json(result);
-
-        return res.status(200).json(result);
-        
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, error: "Internal server error" });
-    }   
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
 }
 
-async function updateSpecializataionController (req, res) {
-    try {
+async function updateSpecializataionController(req, res) {
+  try {
+    const { specialization_id } = req.params;
+    const updateField = req.body;
 
-        const { specialization_id } = req.params;
-        const updateField = req.body;
+    const result = await updateSpecializationService(specialization_id, updateField);
 
+    if (!result.success) return res.status(404).json(result);
 
-        const result = await updateSpecializationService(specialization_id, updateField);
-
-        if(!result.success) return res.status(404).json(result);
-
-        return res.status(200).json(result);
-        
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, error: "Internal server error" });
-    }   
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
 }
 
 async function toggleSpecializationStatusController(req, res) {
-    try {
-        const { specialization_id } = req.params;
-        const { active } = req.body;
+  try {
+    const { specialization_id } = req.params;
+    const { active } = req.body;
 
-        const result = await toggleSpecializationStatusService(specialization_id, active);
+    const result = await toggleSpecializationStatusService(specialization_id, active);
 
-        if(!result.success) return res.status(404).json(result);
+    if (!result.success) return res.status(404).json(result);
 
-        return res.status(200).json(result);
-
-
-    } catch (err) {
-        console.error(err);
-        return res.status(500).json({ success: false, error: "Internal server error" });
-    }
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
 }
 
-
-async function getSpecializationController (req, res) {
+async function getSpecializationController(req, res) {
   try {
-
     const result = await getSpecializationService();
 
     if (!result.success) return res.status(404).json(result);
 
     return res.status(200).json(result);
-    
   } catch (error) {
-    console.error("Error in getAvailableController:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    console.error('Error in getAvailableController:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 }
 
-module.exports = { 
-    createSpecializationController,
-    getAllSpecializationController,
-    getSpecializationByIdController,
-    updateSpecializataionController,
-    toggleSpecializationStatusController,
-    getSpecializationController
+module.exports = {
+  createSpecializationController,
+  getAllSpecializationController,
+  getSpecializationByIdController,
+  updateSpecializataionController,
+  toggleSpecializationStatusController,
+  getSpecializationController,
 };

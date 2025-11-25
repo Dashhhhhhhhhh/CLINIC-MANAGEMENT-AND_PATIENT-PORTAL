@@ -1,8 +1,8 @@
-const { DataTypes, DATE } = require("sequelize");
-const sequelize = require("../../db");
+const { DataTypes, DATE } = require('sequelize');
+const sequelize = require('../../db');
 
 const Result = sequelize.define(
-  "Result",
+  'Result',
   {
     result_id: {
       type: DataTypes.UUID,
@@ -14,24 +14,24 @@ const Result = sequelize.define(
       type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: { tableName: "patients", schema: "users_table" },
-        key: "patient_id",
+        model: { tableName: 'patients', schema: 'users_table' },
+        key: 'patient_id',
       },
     },
     created_by: {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: { tableName: "staff", schema: "users_table" },
-        key: "staff_id",
+        model: { tableName: 'staff', schema: 'users_table' },
+        key: 'staff_id',
       },
     },
     test_type_id: {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: { tableName: "test_types", schema: "lab_results" },
-        key: "test_type_id",
+        model: { tableName: 'test_types', schema: 'lab_results' },
+        key: 'test_type_id',
       },
     },
     result_data: {
@@ -41,15 +41,15 @@ const Result = sequelize.define(
     status: {
       type: DataTypes.STRING(20),
       allowNull: false,
-      defaultValue: "Pending",
+      defaultValue: 'Pending',
     },
     initial_result_by: {
-        type: DataTypes.UUID,
-        allowNull: true,
-        references: {
-          model: { tableName: "staff", schema: "users_table" },
-          key: "staff_id",
-        }
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: { tableName: 'staff', schema: 'users_table' },
+        key: 'staff_id',
+      },
     },
     initial_result_at: {
       type: DataTypes.DATE,
@@ -58,10 +58,10 @@ const Result = sequelize.define(
     final_result_by: {
       type: DataTypes.UUID,
       allownull: true,
-        references: {
-          model: { tableName: "staff", schema: "users_table" },
-          key: "staff_id",
-        }
+      references: {
+        model: { tableName: 'staff', schema: 'users_table' },
+        key: 'staff_id',
+      },
     },
     final_result_at: {
       type: DataTypes.DATE,
@@ -75,40 +75,39 @@ const Result = sequelize.define(
     billing_item_id: {
       type: DataTypes.UUID,
       allowNull: false,
-        references: {
-          model: { tableName: "billing_item", schema: "billing_table"},
-        }
-    }
+      references: {
+        model: { tableName: 'billing_item', schema: 'billing_table' },
+      },
+    },
   },
   {
-    tableName: "results",
-    schema: "lab_results",
+    tableName: 'results',
+    schema: 'lab_results',
     timestamps: true,
-    createdAt: "created_at",
-    updatedAt: "updated_at",
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
   }
 );
 
 async function createResult(data) {
-    
-    return await Result.create ({
-        patient_id: data.patient_id,
-        created_by: data.created_by,
-        result_data: data.result_data,
-        status: data.status,
-        test_type_id: data.test_type_id,
-        initial_result_at: data.initial_result_at,
-        initial_result_by: data.initial_result_by,
-        final_result_at: data.final_result_at,
-        final_result_by: data.final_result_by,
-        billing_item_id: data.billing_item_id
-    });
+  return await Result.create({
+    patient_id: data.patient_id,
+    created_by: data.created_by,
+    result_data: data.result_data,
+    status: data.status,
+    test_type_id: data.test_type_id,
+    initial_result_at: data.initial_result_at,
+    initial_result_by: data.initial_result_by,
+    final_result_at: data.final_result_at,
+    final_result_by: data.final_result_by,
+    billing_item_id: data.billing_item_id,
+  });
 }
 
 async function getAllResult(showDeleted) {
   const where = {};
 
-  if (typeof showDeleted === "boolean") where.is_deleted = showDeleted;
+  if (typeof showDeleted === 'boolean') where.is_deleted = showDeleted;
   else where.is_deleted = false;
 
   return await Result.findAll({
@@ -123,31 +122,29 @@ async function getAllResult(showDeleted) {
       'initial_result_at',
       'initial_result_by',
       'final_result_at',
-      'final_result_by'
+      'final_result_by',
     ],
 
-    order: [["created_at", "DESC"]],
+    order: [['created_at', 'DESC']],
   });
 }
-
 
 async function getResultById(id) {
   return await Result.findByPk(id, {
-  attributes: [
-    'result_id',
-    'patient_id',
-    'created_by',
-    'result_data',
-    'status',
-    'test_type_id',
-    'initial_result_at',
-    'initial_result_by',
-    'final_result_at',
-    'final_result_by'
-  ],
+    attributes: [
+      'result_id',
+      'patient_id',
+      'created_by',
+      'result_data',
+      'status',
+      'test_type_id',
+      'initial_result_at',
+      'initial_result_by',
+      'final_result_at',
+      'final_result_by',
+    ],
   });
 }
-
 
 async function updateResult(id, updateFields) {
   const [updateCount] = await Result.update(updateFields, {
@@ -157,18 +154,18 @@ async function updateResult(id, updateFields) {
   if (!updateCount) return null;
 
   return await Result.findByPk(id, {
-  attributes: [
-    'result_id',
-    'patient_id',
-    'created_by',
-    'result_data',
-    'status',
-    'test_type_id',
-    'initial_result_at',
-    'initial_result_by',
-    'final_result_at',
-    'final_result_by'
-  ],
+    attributes: [
+      'result_id',
+      'patient_id',
+      'created_by',
+      'result_data',
+      'status',
+      'test_type_id',
+      'initial_result_at',
+      'initial_result_by',
+      'final_result_at',
+      'final_result_by',
+    ],
   });
 }
 
@@ -182,11 +179,11 @@ async function toggleResultDeleted(id, isDeletedStatus) {
   return result;
 }
 
-module.exports = { 
-    Result,
-    createResult,
-    getAllResult,
-    getResultById,
-    updateResult,
-    toggleResultDeleted
- };
+module.exports = {
+  Result,
+  createResult,
+  getAllResult,
+  getResultById,
+  updateResult,
+  toggleResultDeleted,
+};

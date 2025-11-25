@@ -2,10 +2,13 @@ const express = require('express');
 const router = express.Router();
 
 const {
-    createSpecializationController, getAllSpecializationController, getSpecializationByIdController, updateSpecializataionController, toggleSpecializationStatusController, getSpecializationController
+  createSpecializationController,
+  getAllSpecializationController,
+  getSpecializationByIdController,
+  updateSpecializataionController,
+  toggleSpecializationStatusController,
+  getSpecializationController,
 } = require('./specialization.controller');
-
-
 
 router.post('/', createSpecializationController);
 router.get('/', getAllSpecializationController);

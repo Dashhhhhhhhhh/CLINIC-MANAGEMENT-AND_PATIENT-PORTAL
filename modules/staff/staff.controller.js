@@ -1,4 +1,11 @@
-const { registerStaffService, getAllStaffService, getStaffByIdService, toggleStaffStatusService, updateStaffService, getAvailableStaffUsersService } = require('./staff.service');
+const {
+  registerStaffService,
+  getAllStaffService,
+  getStaffByIdService,
+  toggleStaffStatusService,
+  updateStaffService,
+  getAvailableStaffUsersService,
+} = require('./staff.service');
 
 async function registerStaffController(req, res) {
   try {
@@ -10,7 +17,7 @@ async function registerStaffController(req, res) {
       position_id,
       employee_number,
       contact_number,
-      active
+      active,
     } = req.body;
 
     const result = await registerStaffService(
@@ -27,34 +34,31 @@ async function registerStaffController(req, res) {
     if (!result.success) return res.status(400).json(result);
 
     return res.status(201).json(result);
-
   } catch (err) {
-    console.error("Error creating staff:", err);
+    console.error('Error creating staff:', err);
 
-    if (err.name === "SequelizeUniqueConstraintError") {
+    if (err.name === 'SequelizeUniqueConstraintError') {
       return res.status(409).json({
         success: false,
-        error: "Staff already exists.",
+        error: 'Staff already exists.',
       });
     }
 
     return res.status(500).json({
       success: false,
-      error: "Internal server error.",
+      error: 'Internal server error.',
     });
   }
 }
 
 async function getAllStaffController(req, res) {
   try {
-   
     const result = await getAllStaffService();
 
     return res.status(200).json(result);
-
   } catch (err) {
-    console.error("Error in getAllDcotorsController:", err);
-    return res.status(500).json({ success: false, error: "Internal server error" });
+    console.error('Error in getAllDcotorsController:', err);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 }
 
@@ -67,10 +71,9 @@ async function getStaffByIdController(req, res) {
     if (!result.success) return res.status(404).json(result);
 
     return res.status(200).json(result);
-
   } catch (err) {
-    console.error("Error retrieving staff by ID:", err);
-    return res.status(500).json({ success: false, error: "Internal server error" });
+    console.error('Error retrieving staff by ID:', err);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 }
 
@@ -82,55 +85,47 @@ async function updateStaffController(req, res) {
 
     const result = await updateStaffService(staff_id, updateField);
 
-    if(!result.success) return res.status(404).json(result);
+    if (!result.success) return res.status(404).json(result);
 
-    return res.status(200).json(result);   
-
+    return res.status(200).json(result);
   } catch (err) {
-    console.error("Error updating staff:", err);
+    console.error('Error updating staff:', err);
 
-    if (err.name === "SequelizeUniqueConstraintError") {
+    if (err.name === 'SequelizeUniqueConstraintError') {
       return res.status(409).json({
         success: false,
-        error: "Staff already exists.",
+        error: 'Staff already exists.',
       });
     }
 
-    return res.status(500).json({ success: false, error: "Internal server error" });
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 }
 
-async function toggleStaffStatusController (req, res) {
+async function toggleStaffStatusController(req, res) {
   try {
     const { id } = req.params;
     const { active } = req.body;
 
-
     const result = await toggleStaffStatusService(id, active);
 
-    if (!result.success) return res.status(400).json(result);    
+    if (!result.success) return res.status(400).json(result);
 
     return res.status(200).json(result);
-
-
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ success: false, error: "Internal server error" });
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 }
 
-async function getAvailableStaffUsersController (req, res) {
-
+async function getAvailableStaffUsersController(req, res) {
   try {
     const result = await getAvailableStaffUsersService();
     res.status(200).json(result);
   } catch (error) {
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 }
-
-
-
 
 module.exports = {
   registerStaffController,
@@ -138,5 +133,5 @@ module.exports = {
   getStaffByIdController,
   updateStaffController,
   toggleStaffStatusController,
-  getAvailableStaffUsersController
+  getAvailableStaffUsersController,
 };

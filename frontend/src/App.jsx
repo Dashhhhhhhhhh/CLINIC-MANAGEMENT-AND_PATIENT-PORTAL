@@ -1,19 +1,19 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import Login from "./pages/Login";
-import ProtectedRoute from "./routes/components/ProtectedRoute";
-import Dashboard from "./pages/Dashboard";
-import DashboardLayout from "./layouts/DashboardLayout";
-import Users from "./pages/Users";
-import Doctors from "./pages/Doctors";
-import Staff from "./pages/Staff";
-import Patients from "./pages/Patients";
-import Billing from "./pages/Billing";
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
+import ProtectedRoute from './routes/components/ProtectedRoute';
+import Dashboard from './pages/Dashboard';
+import DashboardLayout from './layouts/DashboardLayout';
+import Users from './pages/Users';
+import Doctors from './pages/Doctors';
+import Staff from './pages/Staff';
+import Patients from './pages/Patients';
+import Billing from './pages/Billing';
 
 function App() {
   return (
     <Router>
       <Routes>
-         {/* Redirect root to login */}
+        {/* Redirect root to login */}
         <Route path="/" element={<Navigate to="/login" />} />
         {/* Public route */}
         <Route path="/login" element={<Login />} />

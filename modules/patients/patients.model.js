@@ -1,9 +1,9 @@
-const sequelize = require("../../db");
-const { DataTypes } = require("sequelize");
-const { User } = require("../users/user.model");
+const sequelize = require('../../db');
+const { DataTypes } = require('sequelize');
+const { User } = require('../users/user.model');
 
 const Patient = sequelize.define(
-  "Patient",
+  'Patient',
   {
     patient_id: {
       type: DataTypes.UUID,
@@ -68,10 +68,10 @@ const Patient = sequelize.define(
     },
     user_id: {
       type: DataTypes.UUID,
-      allowNull: true, 
+      allowNull: true,
       references: {
-        model: "users",
-        key: "id",
+        model: 'users',
+        key: 'id',
       },
     },
     active: {
@@ -80,16 +80,13 @@ const Patient = sequelize.define(
     },
   },
   {
-    tableName: "patients",
-    schema: "users_table",
+    tableName: 'patients',
+    schema: 'users_table',
     timestamps: true,
-    createdAt: "created_at",
-    updatedAt: "updated_at",
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
   }
 );
-
-
-
 
 async function createPatient(data) {
   return await Patient.create({
@@ -102,12 +99,8 @@ async function createPatient(data) {
     medical_history: data.medical_history ? data.medical_history.trim() : null,
     building_number: data.building_number ? data.building_number.trim() : null,
     street_name: data.street_name ? data.street_name.trim() : null,
-    barangay_subdivision: data.barangay_subdivision
-      ? data.barangay_subdivision.trim()
-      : null,
-    city_municipality: data.city_municipality
-      ? data.city_municipality.trim()
-      : null,
+    barangay_subdivision: data.barangay_subdivision ? data.barangay_subdivision.trim() : null,
+    city_municipality: data.city_municipality ? data.city_municipality.trim() : null,
     province: data.province ? data.province.trim() : null,
     postal_code: data.postal_code ? data.postal_code.trim() : null,
     country: data.country ? data.country.trim() : null,
@@ -119,43 +112,39 @@ async function createPatient(data) {
 
 async function getAllPatients(active) {
   const where = {};
-  if (typeof active === "boolean") where.active = active;
+  if (typeof active === 'boolean') where.active = active;
 
   return await Patient.findAll({
     where,
-    include: [
-      { model: User, as: "user", attributes: ["id", "email", "username"] },
-    ],
+    include: [{ model: User, as: 'user', attributes: ['id', 'email', 'username'] }],
     attributes: [
-      "patient_id",
-      "first_name",
-      "middle_initial",
-      "last_name",
-      "birthdate",
-      "gender",
-      "contact_number",
-      "medical_history",
-      "building_number",
-      "street_name",
-      "barangay_subdivision",
-      "city_municipality",
-      "province",
-      "postal_code",
-      "country",
-      "conditions",
-      "active",
-      "created_at",
-      "updated_at",
+      'patient_id',
+      'first_name',
+      'middle_initial',
+      'last_name',
+      'birthdate',
+      'gender',
+      'contact_number',
+      'medical_history',
+      'building_number',
+      'street_name',
+      'barangay_subdivision',
+      'city_municipality',
+      'province',
+      'postal_code',
+      'country',
+      'conditions',
+      'active',
+      'created_at',
+      'updated_at',
     ],
-    order: [["created_at", "DESC"]],
+    order: [['created_at', 'DESC']],
   });
 }
 
 async function getPatientById(patient_id) {
   return await Patient.findByPk(patient_id, {
-    include: [
-      { model: User, as: "user", attributes: ["id", "email", "username"] },
-    ],
+    include: [{ model: User, as: 'user', attributes: ['id', 'email', 'username'] }],
   });
 }
 
@@ -168,29 +157,27 @@ async function updatePatient(patient_id, updateFields) {
 
   return await Patient.findByPk(patient_id, {
     attributes: [
-      "patient_id",
-      "first_name",
-      "middle_initial",
-      "last_name",
-      "birthdate",
-      "gender",
-      "contact_number",
-      "medical_history",
-      "building_number",
-      "street_name",
-      "barangay_subdivision",
-      "city_municipality",
-      "province",
-      "postal_code",
-      "country",
-      "conditions",
-      "active",
-      "created_at",
-      "updated_at",
+      'patient_id',
+      'first_name',
+      'middle_initial',
+      'last_name',
+      'birthdate',
+      'gender',
+      'contact_number',
+      'medical_history',
+      'building_number',
+      'street_name',
+      'barangay_subdivision',
+      'city_municipality',
+      'province',
+      'postal_code',
+      'country',
+      'conditions',
+      'active',
+      'created_at',
+      'updated_at',
     ],
-    include: [
-      { model: User, as: "user", attributes: ["id", "email", "username"] },
-    ],
+    include: [{ model: User, as: 'user', attributes: ['id', 'email', 'username'] }],
   });
 }
 

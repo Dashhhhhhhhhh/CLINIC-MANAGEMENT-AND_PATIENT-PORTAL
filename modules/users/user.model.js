@@ -1,10 +1,10 @@
-const { DataTypes } = require("sequelize");
-const sequelize = require("../../db");
-const { comparePassword } = require("../../utils/security");
-const { Role } = require("../roles/roles.model");
+const { DataTypes } = require('sequelize');
+const sequelize = require('../../db');
+const { comparePassword } = require('../../utils/security');
+const { Role } = require('../roles/roles.model');
 
 const User = sequelize.define(
-  "User",
+  'User',
   {
     id: {
       type: DataTypes.UUID,
@@ -29,12 +29,12 @@ const User = sequelize.define(
       type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: { tableName: "roles", schema: "public" },
-        key: "role_id",
-      }
+        model: { tableName: 'roles', schema: 'public' },
+        key: 'role_id',
+      },
     },
     gender: {
-      type: DataTypes.ENUM("male", "female"),
+      type: DataTypes.ENUM('male', 'female'),
       allowNull: true,
     },
     active: {
@@ -43,11 +43,11 @@ const User = sequelize.define(
     },
   },
   {
-    tableName: "users",
-    schema: "users_table",
+    tableName: 'users',
+    schema: 'users_table',
     timestamps: true,
-    createdAt: "created_at",
-    updatedAt: "updated_at",
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
   }
 );
 
@@ -63,7 +63,7 @@ async function createUser(data) {
 }
 
 async function loginUser(email, password) {
-  const user = await user.findOne({ where : {email } });
+  const user = await user.findOne({ where: { email } });
   if (!user) return null;
 
   const isPasswordValid = await comparePassword(password, user.password_hash);
@@ -74,20 +74,20 @@ async function loginUser(email, password) {
 
 async function getAllUsers(active, role_id) {
   const where = {};
-  if (typeof active === "boolean") where.active = active;
+  if (typeof active === 'boolean') where.active = active;
   if (role_id) where.role_id = role_id;
 
   return await User.findAll({
     where,
-    include: [{ model: Role, as: "role", attributes: ["role_name"] }],
-    attributes: ["id", "email", "username", "active", "created_at", "updated_at"],
-    order: [["created_at", "DESC"]],
+    include: [{ model: Role, as: 'role', attributes: ['role_name'] }],
+    attributes: ['id', 'email', 'username', 'active', 'created_at', 'updated_at'],
+    order: [['created_at', 'DESC']],
   });
 }
 
 async function getUserById(id) {
   return await User.findByPk(id, {
-    include: [{ model: Role, as: "role", attributes: ["role_name"] }],
+    include: [{ model: Role, as: 'role', attributes: ['role_name'] }],
   });
 }
 
@@ -98,8 +98,8 @@ async function updateUser(id, updateFields) {
   if (!updatedCount) return null;
 
   return await User.findByPk(id, {
-    attributes: ["id", "email", "username", "role_id", "active"],
-    include: [{ model: Role, as: "role", attributes: ["role_name"] }],
+    attributes: ['id', 'email', 'username', 'role_id', 'active'],
+    include: [{ model: Role, as: 'role', attributes: ['role_name'] }],
   });
 }
 

@@ -1,8 +1,8 @@
-const sequelize = require("../../db");
-const { DataTypes } = require("sequelize");
+const sequelize = require('../../db');
+const { DataTypes } = require('sequelize');
 
 const Position = sequelize.define(
-  "Position",
+  'Position',
   {
     position_id: {
       type: DataTypes.UUID,
@@ -20,14 +20,13 @@ const Position = sequelize.define(
     },
   },
   {
-    tableName: "position",
-    schema: "public",
+    tableName: 'position',
+    schema: 'public',
     timestamps: true,
-    createdAt: "created_at",
-    updatedAt: "updated_at",
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
   }
 );
-
 
 async function createPosition(data) {
   return await Position.create({
@@ -38,18 +37,18 @@ async function createPosition(data) {
 
 async function getAllPositions(active) {
   const where = {};
-  if (typeof active === "boolean") where.active = active;
+  if (typeof active === 'boolean') where.active = active;
 
   return await Position.findAll({
     where,
-    attributes: ["position_id", "position_name", "active"],
-    order: [["position_name", "ASC"]],
+    attributes: ['position_id', 'position_name', 'active'],
+    order: [['position_name', 'ASC']],
   });
 }
 
 async function getPositionById(id) {
   return await Position.findByPk(id, {
-    attributes: ["position_id", "position_name", "active"],
+    attributes: ['position_id', 'position_name', 'active'],
   });
 }
 
@@ -60,7 +59,7 @@ async function updatePosition(id, updateFields) {
 
   if (!updatedCount) return null;
   return await Position.findByPk(id, {
-    attributes: ["position_id", "position_name", "active"],
+    attributes: ['position_id', 'position_name', 'active'],
   });
 }
 

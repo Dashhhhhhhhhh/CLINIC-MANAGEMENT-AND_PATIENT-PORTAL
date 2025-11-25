@@ -1,15 +1,10 @@
-const jwt = require("jsonwebtoken");
+const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-const { validate } = require("uuid");
+const { validate } = require('uuid');
 
-
-function generateToken({id, role_id}) {
-  return jwt.sign(
-    { id, role_id },
-    process.env.JWT_SECRET,
-    { expiresIn: "1hr" }
-  );
+function generateToken({ id, role_id }) {
+  return jwt.sign({ id, role_id }, process.env.JWT_SECRET, { expiresIn: '1hr' });
 }
 
 async function hashPassword(password) {
@@ -21,13 +16,12 @@ async function comparePassword(password, hash) {
 }
 
 function isValidUUID(id) {
-    return validate(id);
+  return validate(id);
 }
 
-
-module.exports = { 
-    generateToken,
-    hashPassword, 
-    comparePassword,
-    isValidUUID
- }
+module.exports = {
+  generateToken,
+  hashPassword,
+  comparePassword,
+  isValidUUID,
+};

@@ -1,9 +1,8 @@
-const sequelize = require("../../db");
-const { DataTypes } = require("sequelize");
-
+const sequelize = require('../../db');
+const { DataTypes } = require('sequelize');
 
 const Specialization = sequelize.define(
-  "Specialization",
+  'Specialization',
   {
     specialization_id: {
       type: DataTypes.UUID,
@@ -24,14 +23,13 @@ const Specialization = sequelize.define(
     },
   },
   {
-    tableName: "specializations",
-    schema: "public",
+    tableName: 'specializations',
+    schema: 'public',
     timestamps: true,
-    createdAt: "created_at",
-    updatedAt: "updated_at",
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
   }
 );
-
 
 async function createSpecialization(data) {
   return await Specialization.create({
@@ -43,18 +41,18 @@ async function createSpecialization(data) {
 
 async function getAllSpecialization(active) {
   const where = {};
-  if (typeof active === "boolean") where.active = active;
+  if (typeof active === 'boolean') where.active = active;
 
   return await Specialization.findAll({
     where,
-    attributes: ["specialization_id", "specialization_name", "description", "active"],
-    order: [["specialization_name", "ASC"]],
+    attributes: ['specialization_id', 'specialization_name', 'description', 'active'],
+    order: [['specialization_name', 'ASC']],
   });
 }
 
 async function getSpecializationById(id) {
   return await Specialization.findByPk(id, {
-    attributes: ["specialization_id", "specialization_name", "description", "active"],
+    attributes: ['specialization_id', 'specialization_name', 'description', 'active'],
   });
 }
 
@@ -65,7 +63,7 @@ async function updateSpecialization(id, updateFields) {
 
   if (!updatedCount) return null;
   return await Specialization.findByPk(id, {
-    attributes: ["specialization_id", "specialization_name", "description", "active"],
+    attributes: ['specialization_id', 'specialization_name', 'description', 'active'],
   });
 }
 

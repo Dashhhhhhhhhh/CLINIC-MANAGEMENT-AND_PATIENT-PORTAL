@@ -1,8 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 
-
-function Billing () {
-
-}
+function Billing() {}
 
 export default Billing;

@@ -7,18 +7,18 @@ const {
   getStaffByIdController,
   updateStaffController,
   toggleStaffStatusController,
-  getAvailableStaffUsersController
+  getAvailableStaffUsersController,
 } = require('./staff.controller');
 
 router.post('/', registerStaffController);
 
 router.get('/', getAllStaffController);
 
-router.get("/available-users", getAvailableStaffUsersController);
+router.get('/available-users', getAvailableStaffUsersController);
 
 router.get('/:id', getStaffByIdController);
 
-router.patch("/:staff_id", updateStaffController);
+router.patch('/:staff_id', updateStaffController);
 
 router.patch('/:id/status', toggleStaffStatusController);
 

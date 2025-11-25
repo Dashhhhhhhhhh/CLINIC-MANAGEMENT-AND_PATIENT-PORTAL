@@ -1,8 +1,8 @@
-const sequelize = require("../../db");
-const { DataTypes } = require("sequelize");
+const sequelize = require('../../db');
+const { DataTypes } = require('sequelize');
 
 const Role = sequelize.define(
-  "Role",
+  'Role',
   {
     role_id: {
       type: DataTypes.UUID,
@@ -24,11 +24,11 @@ const Role = sequelize.define(
     },
   },
   {
-    tableName: "roles",
-    schema: "public",
+    tableName: 'roles',
+    schema: 'public',
     timestamps: true,
-    createdAt: "created_at",
-    updatedAt: "updated_at",
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
   }
 );
 
@@ -42,23 +42,22 @@ async function createRole(data) {
 
 async function getAllRoles(active) {
   const where = {};
-  if (typeof active === "boolean") where.active = active;
+  if (typeof active === 'boolean') where.active = active;
 
   return await Role.findAll({
     where,
-    attributes: ["role_id", "role_name", "description", "active"],
-    order: [["role_name", "ASC"]],
+    attributes: ['role_id', 'role_name', 'description', 'active'],
+    order: [['role_name', 'ASC']],
   });
 }
 
 async function getRoleById(id) {
   return await Role.findByPk(id, {
-    attributes: ["role_id", "role_name", "description", "active"],
+    attributes: ['role_id', 'role_name', 'description', 'active'],
   });
 }
 
 async function updateRole(id, updateFields) {
-
   const [updatedCount] = await Role.update(updateFields, {
     where: { role_id: id },
   });
@@ -66,7 +65,7 @@ async function updateRole(id, updateFields) {
   if (!updatedCount) return null;
 
   return await Role.findByPk(id, {
-    attributes: ["role_id", "role_name", "description", "active"],
+    attributes: ['role_id', 'role_name', 'description', 'active'],
   });
 }
 

@@ -1,15 +1,15 @@
-const sequelize = require("../../db");
-const { DataTypes } = require("sequelize");
-const { Role } = require("../roles/roles.model");
-const { User } = require("../users/user.model");
-const { Specialization } = require("../specialization/specialization.model");
+const sequelize = require('../../db');
+const { DataTypes } = require('sequelize');
+const { Role } = require('../roles/roles.model');
+const { User } = require('../users/user.model');
+const { Specialization } = require('../specialization/specialization.model');
 
 const Doctor = sequelize.define(
-  "Doctor",
+  'Doctor',
   {
     doctor_id: {
       type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,  
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     first_name: {
@@ -33,7 +33,7 @@ const Doctor = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    user_id: {   
+    user_id: {
       type: DataTypes.UUID,
       allowNull: false,
     },
@@ -43,14 +43,13 @@ const Doctor = sequelize.define(
     },
   },
   {
-    tableName: "doctors",
-    schema: "users_table",
+    tableName: 'doctors',
+    schema: 'users_table',
     timestamps: true,
-    createdAt: "created_at",
-    updatedAt: "updated_at",
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
   }
 );
-
 
 async function createDoctor(data) {
   return await Doctor.create({
@@ -59,84 +58,83 @@ async function createDoctor(data) {
     last_name: data.last_name,
     license_number: data.license_number,
     contact_number: data.contact_number,
-    specialization_id: data.specialization_id, 
+    specialization_id: data.specialization_id,
     user_id: data.user_id,
     active: data.active ?? true,
   });
 }
 
-
 async function getAllDoctors(active, specialization) {
   const where = {};
-  if (typeof active === "boolean") where.active = active;
+  if (typeof active === 'boolean') where.active = active;
   if (specialization) where.specialization_id = specialization;
 
-return await Doctor.findAll({
-  where,
-  include: [
-    {
-      model: User,
-      as: "user",
-      attributes: ["id", "email", "username", "active"],
-      include: [
-        {
-          model: Role,
-          as: "role",
-          attributes: ["role_id", "role_name", "description"],
-        },
-      ],
-    },
-    {
-      model: Specialization,
-      as: "specialization",
-      attributes: ["specialization_id", "specialization_name", "description"],
-    },
-  ],
-  attributes: [
-    "doctor_id",
-    "first_name",
-    "middle_initial",
-    "last_name",
-    "license_number",
-    "contact_number",
-    "specialization_id",
-    "active",
-  ],
-});
+  return await Doctor.findAll({
+    where,
+    include: [
+      {
+        model: User,
+        as: 'user',
+        attributes: ['id', 'email', 'username', 'active'],
+        include: [
+          {
+            model: Role,
+            as: 'role',
+            attributes: ['role_id', 'role_name', 'description'],
+          },
+        ],
+      },
+      {
+        model: Specialization,
+        as: 'specialization',
+        attributes: ['specialization_id', 'specialization_name', 'description'],
+      },
+    ],
+    attributes: [
+      'doctor_id',
+      'first_name',
+      'middle_initial',
+      'last_name',
+      'license_number',
+      'contact_number',
+      'specialization_id',
+      'active',
+    ],
+  });
 }
 
 async function getDoctorById(id) {
   return await Doctor.findByPk(id, {
-  include: [
-    {
-      model: User,
-      as: "user",
-      attributes: ["id", "email", "username", "active"],
-      include: [
-        {
-          model: Role,
-          as: "role",
-          attributes: ["role_id", "role_name", "description"],
-        },
-      ],
-    },
-    {
-      model: Specialization,
-      as: "specialization",
-      attributes: ["specialization_id", "specialization_name", "description"],
-    },
-  ],
-  attributes: [
-    "doctor_id",
-    "first_name",
-    "middle_initial",
-    "last_name",
-    "license_number",
-    "contact_number",
-    "specialization_id",
-    "active",
-  ],
-});
+    include: [
+      {
+        model: User,
+        as: 'user',
+        attributes: ['id', 'email', 'username', 'active'],
+        include: [
+          {
+            model: Role,
+            as: 'role',
+            attributes: ['role_id', 'role_name', 'description'],
+          },
+        ],
+      },
+      {
+        model: Specialization,
+        as: 'specialization',
+        attributes: ['specialization_id', 'specialization_name', 'description'],
+      },
+    ],
+    attributes: [
+      'doctor_id',
+      'first_name',
+      'middle_initial',
+      'last_name',
+      'license_number',
+      'contact_number',
+      'specialization_id',
+      'active',
+    ],
+  });
 }
 
 async function updateDoctor(id, updateFields) {
@@ -146,25 +144,25 @@ async function updateDoctor(id, updateFields) {
 
   if (!updatedCount) return null;
 
-return await Doctor.findByPk(id, {
-  include: [
-    {
-      model: Specialization,
-      as: "specialization",
-      attributes: ["specialization_id", "specialization_name"],
-    },
-  ],
-  attributes: [
-    "doctor_id",
-    "first_name",
-    "middle_initial",
-    "last_name",
-    "license_number",
-    "contact_number",
-    "specialization_id",
-    "active",
-  ],
-});
+  return await Doctor.findByPk(id, {
+    include: [
+      {
+        model: Specialization,
+        as: 'specialization',
+        attributes: ['specialization_id', 'specialization_name'],
+      },
+    ],
+    attributes: [
+      'doctor_id',
+      'first_name',
+      'middle_initial',
+      'last_name',
+      'license_number',
+      'contact_number',
+      'specialization_id',
+      'active',
+    ],
+  });
 }
 
 async function toggleDoctorStatus(id, activeStatus) {

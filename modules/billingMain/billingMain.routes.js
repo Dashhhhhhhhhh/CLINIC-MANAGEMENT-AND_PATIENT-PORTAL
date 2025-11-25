@@ -2,14 +2,14 @@ const express = require('express');
 const router = express.Router();
 
 const {
-    createBillingController,
-    getAllBillController,
-    getBillingByIdController,
-    toggleDeletebillingController,
-    finalizeBillingController
+  createBillingController,
+  getAllBillController,
+  getBillingByIdController,
+  toggleDeletebillingController,
+  finalizeBillingController,
 } = require('../billingMain/billingMain.controller');
 
-const authMiddleware = require("../../middleware/authMiddleware");
+const authMiddleware = require('../../middleware/authMiddleware');
 
 router.post('/', authMiddleware, createBillingController);
 router.get('/', authMiddleware, getAllBillController);
