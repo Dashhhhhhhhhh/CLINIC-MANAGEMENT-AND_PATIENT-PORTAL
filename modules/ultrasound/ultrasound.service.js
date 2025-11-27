@@ -1,16 +1,15 @@
 const { isValidUUID } = require('../../utils/security');
-const { Xray } = require('./xray.model');
+const { Ultrasound, updateUltrasoundResult } = require('./ultrasound.model');
 const { Result } = require('../results/result.model');
-const { where } = require('sequelize');
 const { formatToPh } = require('../../utils/datetime');
 
-async function createXrayService(result_id, data) {
+async function createUltrasoundService(result_id, data) {
   if (!result_id || !isValidUUID(result_id)) {
     return { success: false, message: 'Invalid or missing result_id' };
   }
 
   const allowedFields = [
-    'xray_type',
+    'ultrasound_type',
     'history',
     'comparison',
     'technique',
@@ -35,25 +34,25 @@ async function createXrayService(result_id, data) {
     resultField[field] = strValue;
   }
 
-  if (resultField.xray_type && resultField.xray_type.length > 50) {
-    return { success: false, message: 'xray_type must be 50 characters or less.' };
+  if (resultField.ultrasound_type && resultField.ultrasound_type.length > 50) {
+    return { success: false, message: 'Ultrasound type must be 50 characters or less.' };
   }
 
-  if (resultField.technique && resultField.technique.length > 250) {
-    return { success: false, message: 'technique must be 250 characters or less.' };
+  if (resultField.comparison && resultField.comparison.length > 250) {
+    return { success: false, message: 'Comparison must be 250 characters or less.' };
   }
 
   resultField.result_id = result_id;
 
-  const xray = await Xray.create(resultField);
+  const ultrasound = await Ultrasound.create(resultField);
 
   return {
     success: true,
-    data: xray,
+    data: ultrasound,
   };
 }
 
-async function getallXrayService(is_deleted) {
+async function getAllUltrasoundService(is_deleted) {
   const whereClause = {};
 
   if (is_deleted !== undefined) {
@@ -69,11 +68,11 @@ async function getallXrayService(is_deleted) {
     }
   }
 
-  const xray = await Xray.findAll({
+  const ultrasound = await Ultrasound.findAll({
     where: whereClause,
     attributes: [
-      'xray_id',
-      'xray_type',
+      'ultrasound_id',
+      'ultrasound_type',
       'history',
       'comparison',
       'technique',
@@ -101,18 +100,18 @@ async function getallXrayService(is_deleted) {
 
   return {
     success: true,
-    count: xray.length,
-    data: xray.map(xrays => xrays.get({ plain: true })),
+    count: ultrasound.length,
+    data: ultrasound.map(ultrasounds => ultrasounds.get({ plain: true })),
   };
 }
 
-async function getXrayByIdService(xray_id) {
-  if (!isValidUUID(xray_id)) return { success: false, message: 'Invalid xray ID.' };
+async function getUltrasoundByIdService(ultrasound_id) {
+  if (!isValidUUID(ultrasound_id)) return { success: false, message: 'Invalid ultrasound ID.' };
 
-  const xray = await Xray.findByPk(xray_id, {
+  const ultrasound = await Ultrasound.findByPk(ultrasound_id, {
     attributes: [
-      'xray_id',
-      'xray_type',
+      'ultrasound_id',
+      'ultrasound_type',
       'history',
       'comparison',
       'technique',
@@ -138,27 +137,28 @@ async function getXrayByIdService(xray_id) {
     ],
   });
 
-  if (!xray) return { success: false, message: 'Xray result not found.' };
+  if (!ultrasound) return { success: false, message: 'Ultrasound result not found.' };
 
   return {
     success: true,
-    data: xray.get({ plain: true }),
+    data: ultrasound.get({ plain: true }),
   };
 }
 
-async function updateXrayResultService(xray_id, updateField) {
-  if (!isValidUUID(xray_id)) {
-    return { success: false, message: 'Invalid xray ID.' };
-  }
+async function uptdateUltrasoundResultService(ultrasound_id, updateField) {
+  if (!isValidUUID(ultrasound_id)) return { success: false, message: 'Invalid ultrasound ID.' };
 
   const allowedFields = [
-    'xray_type',
+    'ultrasound_type',
     'history',
     'comparison',
     'technique',
     'findings',
     'impression',
     'remarks',
+    'is_deleted',
+    'created_at',
+    'updated_at',
   ];
 
   const update = {};
@@ -177,7 +177,7 @@ async function updateXrayResultService(xray_id, updateField) {
     update[field] = strValue;
   }
 
-  if (update.xray_type && update.xray_type.length > 50) {
+  if (update.ultrasound_type && update.ultrasound_type.length > 50) {
     return { success: false, message: 'xray_type must be 50 characters or less.' };
   }
 
@@ -189,32 +189,32 @@ async function updateXrayResultService(xray_id, updateField) {
     return { success: false, error: 'No fields provided to update.' };
   }
 
-  const updateXray = await Xray.update(update, {
-    where: { xray_id },
+  const updateUltrasound = await Ultrasound.update(update, {
+    where: { ultrasound_id },
   });
 
-  const refreshedXray = await Xray.findByPk(xray_id);
+  const refreshedUltrasound = await Ultrasound.findByPk(ultrasound_id);
 
-  if (!refreshedXray) return { success: false, message: 'Xray not found.' };
+  if (!refreshedUltrasound) return { success: false, message: 'Ultrasound not found.' };
 
-  const plain = refreshedXray.get({ plain: true });
+  const plain = refreshedUltrasound.get({ plain: true });
   plain.created_at = formatToPh(plain.created_at);
   plain.updated_at = formatToPh(plain.updated_at);
 
   return {
     success: true,
-    message: 'Xray updated successfully',
+    message: 'Ultrasound update successfully.',
     data: plain,
   };
 }
 
-async function toggleDeleteXrayResultService(xray_id, is_deleted) {
-  if (!isValidUUID(xray_id)) {
-    return { success: false, message: 'Invalid xray ID.' };
+async function toggleDeleteUltrasoundResultService(ultrasound_id, is_deleted) {
+  if (!isValidUUID(ultrasound_id)) {
+    return { success: false, message: 'Invalid ultrasound ID.' };
   }
-  const xray = await Xray.findOne({ where: { xray_id } });
+  const ultrasound = await Ultrasound.findOne({ where: { ultrasound_id } });
 
-  if (!xray) return { success: false, message: 'X-ray not found.' };
+  if (!ultrasound) return { success: false, message: 'Ultrasound not found.' };
 
   const parsedDelete =
     is_deleted === true || is_deleted === 'true'
@@ -226,27 +226,29 @@ async function toggleDeleteXrayResultService(xray_id, is_deleted) {
   if (parsedDelete === null)
     return { success: false, message: 'Invalid is_deleted value. Must be true or false.' };
 
-  if (xray.is_deleted === parsedDelete) {
+  if (ultrasound.is_deleted === parsedDelete) {
     return {
       success: false,
-      message: parsedDelete ? 'Xray result is already deleted' : 'Xray result is already active',
+      message: parsedDelete
+        ? 'Ultrasound result is already deleted'
+        : 'Ultrasound result is already active',
     };
   }
 
-  xray.is_deleted = parsedDelete;
-  await xray.save();
+  ultrasound.is_deleted = parsedDelete;
+  await ultrasound.save();
 
   return {
     success: true,
-    message: parsedDelete ? 'Xray deleted.' : 'Xray restored.',
-    data: xray.get({ plain: true }),
+    message: parsedDelete ? 'Ultrasound deleted.' : 'Ultrasound restored.',
+    data: ultrasound.get({ plain: true }),
   };
 }
 
 module.exports = {
-  createXrayService,
-  getallXrayService,
-  getXrayByIdService,
-  updateXrayResultService,
-  toggleDeleteXrayResultService,
+  createUltrasoundService,
+  getAllUltrasoundService,
+  getUltrasoundByIdService,
+  uptdateUltrasoundResultService,
+  toggleDeleteUltrasoundResultService,
 };

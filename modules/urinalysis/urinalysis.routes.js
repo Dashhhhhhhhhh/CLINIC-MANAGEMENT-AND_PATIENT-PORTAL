@@ -6,17 +6,17 @@ const {
   getAllUrinalysisResultController,
   getAllUrinalysisByIdController,
   updateUrinalysisResultController,
-  toggleDeletedUrinalysisResultController,
-} = require('../controllers/urinalysisController');
+  toggleUrinalysisStatusController,
+} = require('./urinalysis.controller');
 
 router.post('/', createUrinalysisController);
 
 router.get('/', getAllUrinalysisResultController);
 
-router.get('/:id', getAllUrinalysisByIdController);
+router.get('/:urinalysis_id', getAllUrinalysisByIdController);
 
-router.patch('/:id', updateUrinalysisResultController);
+router.patch('/:urinalysis_id', updateUrinalysisResultController);
 
-router.patch('/:id/toggle-delete', toggleDeletedUrinalysisResultController);
+router.patch('/:urinalysis_id/toggle-delete', toggleUrinalysisStatusController);
 
 module.exports = router;

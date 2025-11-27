@@ -6,12 +6,12 @@ const {
   getUltrasoundByIdController,
   uptdateUltrasoundResultController,
   toggleDeleteUltrasoundResultController,
-} = require('../controllers/ultrasoundController');
+} = require('./ultrasound.controller');
 
 router.post('/', createUltrasoundController);
 router.get('/', getAllUltrasoundController);
-router.get('/:id', getUltrasoundByIdController);
-router.patch('/:id', uptdateUltrasoundResultController);
-router.patch('/:id/toggle-delete', toggleDeleteUltrasoundResultController);
+router.get('/:ultrasound_id', getUltrasoundByIdController);
+router.patch('/:ultrasound_id', uptdateUltrasoundResultController);
+router.patch('/:ultrasound_id/toggle-delete', toggleDeleteUltrasoundResultController);
 
 module.exports = router;

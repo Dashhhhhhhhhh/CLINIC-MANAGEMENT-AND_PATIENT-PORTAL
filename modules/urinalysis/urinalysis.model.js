@@ -1,6 +1,6 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../db');
-const { Result } = require('../modules/results/result.model');
+const { DataTypes, DATE } = require('sequelize');
+const sequelize = require('../../db');
+const { Result } = require('../results/result.model');
 
 const Urinalysis = sequelize.define(
   'Urinalysis',
