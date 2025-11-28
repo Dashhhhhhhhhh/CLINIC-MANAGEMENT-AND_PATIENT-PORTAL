@@ -5,6 +5,7 @@ const { Staff } = require('../staff/staff.model');
 const { formatToPh } = require('../../utils/datetime');
 const { now } = require('moment-timezone');
 const { BillingItem } = require('../billingItem/billingItem.model');
+const { getAvailablePatientsByModel } = require('../../utils/helpers/getAvailablePatients');
 
 async function createBillService(patient_id, created_by) {
   if (!created_by || !isValidUUID(created_by)) {
@@ -60,12 +61,10 @@ async function getAllBillingMainService(is_deleted) {
     include: [
       {
         model: Patient,
-        as: 'Patient',
         attributes: ['patient_id', 'first_name', 'middle_initial', 'last_name'],
       },
       {
         model: Staff,
-        as: 'Staff',
         attributes: ['staff_id', 'first_name', 'last_name'],
       },
     ],
@@ -197,10 +196,15 @@ async function finalizeBillingService(billing_id, updated_by) {
   };
 }
 
+async function getAvailablePatientsByService() {
+  return await getAvailablePatientsByModel(Billing);
+}
+
 module.exports = {
   createBillService,
   getAllBillingMainService,
   getBillingByIdService,
   toggleDeleteBillingService,
   finalizeBillingService,
+  getAvailablePatientsByService,
 };

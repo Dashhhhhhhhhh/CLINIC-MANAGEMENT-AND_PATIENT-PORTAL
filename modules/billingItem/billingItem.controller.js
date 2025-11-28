@@ -4,6 +4,7 @@ const {
   getItemByIdService,
   updateBillingItemService,
   toggleDeletebillingItemService,
+  getAvailablePatientsByService,
 } = require('./billingItem.service');
 const { formatToPh } = require('../../utils/datetime');
 

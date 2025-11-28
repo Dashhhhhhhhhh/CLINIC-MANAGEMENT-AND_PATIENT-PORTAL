@@ -4,6 +4,7 @@ const {
   getBillingByIdService,
   toggleDeleteBillingService,
   finalizeBillingService,
+  getAvailablePatientsByService,
 } = require('../billingMain/billingMain.service');
 const { formatToPh } = require('../../utils/datetime');
 const { isValidUUID } = require('../../utils/security');
@@ -155,10 +156,23 @@ async function finalizeBillingController(req, res) {
   }
 }
 
+async function getAvailablePatientsByController(req, res) {
+  try {
+    const result = await getAvailablePatientsByService();
+    res.status(200).json({
+      success: true,
+      patients: result.patients,
+    });
+  } catch (error) {
+    console.error('Controller error:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+}
 module.exports = {
   createBillingController,
   getAllBillController,
   getBillingByIdController,
   toggleDeletebillingController,
   finalizeBillingController,
+  getAvailablePatientsByController,
 };

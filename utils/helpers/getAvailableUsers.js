@@ -5,8 +5,8 @@ const { Patient } = require('../../modules/patients/patients.model');
 const { Op } = require('sequelize');
 
 async function getAvailableUsersByModel(Model) {
-  const assignedUserIds = await Model.findAll({ attributes: ['user_id'] });
-  const userIds = assignedUserIds.map(item => item.user_id);
+  const assignedUserIsds = await Model.findAll({ attributes: ['user_id'] });
+  const userIds = assignedUserIsds.map(item => item.user_id);
 
   const availableUsers = await User.findAll({
     where: {
