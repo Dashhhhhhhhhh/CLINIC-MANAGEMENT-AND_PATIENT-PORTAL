@@ -4,7 +4,7 @@ const {
   getItemByIdService,
   updateBillingItemService,
   toggleDeletebillingItemService,
-  getAvailablePatientsByService,
+  getBillingItemsByBillingIdService,
 } = require('./billingItem.service');
 const { formatToPh } = require('../../utils/datetime');
 
@@ -40,7 +40,7 @@ async function createBillingItemController(req, res) {
 
     return res.status(201).json({
       ...result,
-      item: item,
+      item: data,
     });
   } catch (error) {
     console.error('Error creating billItem:', error);
@@ -60,15 +60,16 @@ async function getAllItemController(req, res) {
 
     const result = await getAllItemService(is_deleted);
 
-    result.item = result.billingItem.map(items => ({
+    result.billingItems = result.billingItem.map(items => ({
       ...items,
       created_at: formatToPh(items.created_at),
       updated_at: formatToPh(items.updated_at),
     }));
 
     return res.status(200).json({
-      ...result,
-      item: result.item,
+      success: true,
+      message: 'Billing items retrieved.',
+      billingItems: result.billingItems,
     });
   } catch (error) {
     console.error('Error fetching item:', error);
@@ -164,10 +165,24 @@ async function toggleDeletebillingItemController(req, res) {
   }
 }
 
+async function getBillingItemsByBillingIdController(req, res) {
+  const { billing_id } = req.params;
+
+  const result = await getBillingItemsByBillingIdService(billing_id);
+
+  return res.status(200).json({
+    success: true,
+    message: 'Billing items retrieved successfully',
+    count: result.count,
+    data: result.billingItems,
+  });
+}
+
 module.exports = {
   createBillingItemController,
   getAllItemController,
   getItemByIdController,
   updateBillingItemController,
   toggleDeletebillingItemController,
+  getBillingItemsByBillingIdController,
 };

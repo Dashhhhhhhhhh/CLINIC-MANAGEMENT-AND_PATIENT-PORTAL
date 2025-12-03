@@ -9,10 +9,13 @@ const {
   getItemByIdController,
   updateBillingItemController,
   toggleDeletebillingItemController,
+  getBillingItemsByBillingIdController,
 } = require('../billingItem/billingItem.controller');
 
 router.post('/', authenticateJWT, createBillingItemController);
 router.get('/', authenticateJWT, getAllItemController);
+
+router.get('/billing/:billing_id', authenticateJWT, getBillingItemsByBillingIdController);
 
 router.get('/:billing_item_id', authenticateJWT, getItemByIdController);
 router.patch('/:billing_item_id', authenticateJWT, updateBillingItemController);

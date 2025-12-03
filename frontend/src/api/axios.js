@@ -4,12 +4,16 @@ const api = axios.create({
   baseURL: 'http://localhost:3000/',
 });
 
-//attach token automatically
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('token');
+
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    config.headers.authorization = `Bearer ${token}`;
   }
+
+  console.log('AUTH HEADER SET:', config.headers.authorization);
+  console.log('REQUEST URL:', config.url);
+
   return config;
 });
 

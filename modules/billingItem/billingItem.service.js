@@ -430,10 +430,53 @@ async function toggleDeletebillingItemService(billing_item_id, billing_id, is_de
   };
 }
 
+async function getBillingItemsByBillingIdService(billing_id) {
+  if (!isValidUUID(billing_id)) {
+    return { success: false, error: 'Invalid billing ID' };
+  }
+
+  const billingItems = await BillingItem.findAll({
+    where: {
+      billing_id,
+      is_deleted: false,
+    },
+    attributes: [
+      'billing_item_id',
+      'billing_id',
+      'service_id',
+      'description',
+      'quantity',
+      'unit_price',
+      'subtotal',
+      'is_deleted',
+      'created_at',
+      'updated_at',
+      'created_by',
+      'updated_by',
+      'deleted_by',
+      'deleted_at',
+    ],
+    include: [
+      {
+        model: BillingService,
+        as: 'service',
+        attributes: ['service_name', 'default_price', 'category'],
+      },
+    ],
+  });
+
+  return {
+    success: true,
+    count: billingItems.length,
+    billingItems: billingItems.map(item => item.get({ plain: true })),
+  };
+}
+
 module.exports = {
   createBillingItemService,
   getAllItemService,
   getItemByIdService,
   updateBillingItemService,
   toggleDeletebillingItemService,
+  getBillingItemsByBillingIdService,
 };
