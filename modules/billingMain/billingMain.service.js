@@ -57,6 +57,7 @@ async function getAllBillingMainService(is_deleted) {
       'created_at',
       'updated_at',
       'finalized_at',
+      'is_deleted',
     ],
     include: [
       {
@@ -90,6 +91,7 @@ async function getBillingByIdService(billing_id) {
       'created_at',
       'updated_at',
       'finalized_at',
+      'is_deleted',
     ],
     include: [
       {
@@ -200,6 +202,66 @@ async function getAvailablePatientsByService() {
   return await getAvailablePatientsByModel(Billing);
 }
 
+async function updateBillingServie(billing_id, updatedField) {
+  if (!isValidUUID(billing_id)) {
+    return { success: false, error: 'Invalid billing ID.' };
+  }
+
+  const existingBilling = await Billing.findByPk(billing_id);
+
+  if (!existingBilling) {
+    return { success: false, message: 'Billing not found.' };
+  }
+
+  if (existingBilling.finalized_at !== null) {
+    return { success: false, message: 'Billing is already finalized cannot be modified.' };
+  }
+
+  if (existingBilling.is_deleted) {
+    return { success: false, message: 'Billing is already deleted cannot be modified.' };
+  }
+
+  updatedField.payment_status = updatedField.payment_status.trim().toLowerCase();
+
+  const allowedStatuses = ['pending', 'paid', 'cancelled'];
+
+  if (!allowedStatuses.includes(updatedField.payment_status)) {
+    return { success: false, message: 'Invalid payment status' };
+  }
+
+  if (existingBilling.payment_status === 'cancelled') {
+    return { success: false, message: 'Billing is already cancelled cannot be modified.' };
+  }
+
+  if (existingBilling.payment_status === 'paid' && updatedField.payment_status === 'pending') {
+    return { success: false, message: 'Billing is already paid cannot be revert to pending.' };
+  }
+
+  if (existingBilling.payment_status === updatedField.payment_status) {
+    return { success: false, message: 'No changes detected' };
+  }
+
+  const updatePayload = {
+    payment_status: updatedField.payment_status,
+    updated_by: updatedField.updated_by,
+    updated_at: new Date(),
+  };
+
+  await Billing.update(updatePayload, { where: { billing_id } });
+
+  const refreshedBilling = await Billing.findByPk(billing_id);
+
+  const plain = refreshedBilling.get({ plain: true });
+  plain.created_at = formatToPh(plain.created_at);
+  plain.updated_at = formatToPh(plain.updated_at);
+
+  return {
+    success: true,
+    message: 'Billing updated successfully',
+    billing: plain,
+  };
+}
+
 module.exports = {
   createBillService,
   getAllBillingMainService,
@@ -207,4 +269,5 @@ module.exports = {
   toggleDeleteBillingService,
   finalizeBillingService,
   getAvailablePatientsByService,
+  updateBillingServie,
 };

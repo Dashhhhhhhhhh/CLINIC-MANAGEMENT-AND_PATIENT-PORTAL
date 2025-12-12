@@ -121,7 +121,7 @@ async function updateBillingItemController(req, res) {
     const result = await updateBillingItemService(billing_item_id, updateField);
 
     if (!result.success) {
-      if (result.message === 'Billing not found') {
+      if (result.message === 'Billing item not found') {
         return res.status(404).json(result);
       }
       return res.status(200).json(result);

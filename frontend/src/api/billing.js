@@ -56,6 +56,17 @@ export async function finalizeBilling(billing_id, updatedData) {
   }
 }
 
+export async function updateBilling(billing_id, updatedData) {
+  try {
+    const response = await api.patch(`/billing/${billing_id}`, updatedData);
+    console.log('Billing updated:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating billing.', error);
+    throw error;
+  }
+}
+
 export async function getAvailablePatients() {
   try {
     const response = await api.get('/billing/available-patients');

@@ -5,6 +5,7 @@ const {
   toggleDeleteBillingService,
   finalizeBillingService,
   getAvailablePatientsByService,
+  updateBillingServie,
 } = require('../billingMain/billingMain.service');
 const { formatToPh } = require('../../utils/datetime');
 const { isValidUUID } = require('../../utils/security');
@@ -168,6 +169,31 @@ async function getAvailablePatientsByController(req, res) {
     return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 }
+
+async function updateBillingController(req, res) {
+  try {
+    const { billing_id } = req.params;
+    const { payment_status } = req.body;
+    const updated_by = req.staff.staff_id;
+
+    const updatedField = {
+      payment_status,
+      updated_by,
+    };
+
+    const result = await updateBillingServie(billing_id, updatedField);
+
+    if (!result.success) {
+      if (result.message === 'Billing not found') {
+        return res.status(404).json(result);
+      }
+      return res.status(200).json(result);
+    }
+  } catch (error) {
+    console.error('Controller error:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+}
 module.exports = {
   createBillingController,
   getAllBillController,
@@ -175,4 +201,5 @@ module.exports = {
   toggleDeletebillingController,
   finalizeBillingController,
   getAvailablePatientsByController,
+  updateBillingController,
 };

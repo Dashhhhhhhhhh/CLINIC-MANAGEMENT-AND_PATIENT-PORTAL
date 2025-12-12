@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { getPaymentStatusStyle } from '../utils/badgeStyles';
 import { useNavigate } from 'react-router-dom';
 import AddBillingItemModal from '../components/modals/AddBillingItemModal';
+import UpdateBillingModal from '../components/modals/UpdateBillingModal';
+import DeletBillingModal from '../components/modals/DeleteBillingModal';
+
 import { useParams } from 'react-router-dom';
 
 import {
@@ -11,7 +14,10 @@ import {
   toggleDeleteBilling,
   finalizeBilling,
   getAvailablePatients,
+  updateBilling,
 } from '../api/billing';
+import { updatedBillingService } from '../api/billing_service';
+import FinalizeBillingModal from '../components/modals/FinalizeBillingModal';
 
 function Billing() {
   /* ============================================================
@@ -53,11 +59,11 @@ function Billing() {
   const [isAddBillingItemOpen, setIsAddBillingItemOpen] = useState(false);
 
   function openAddBillingItemModal() {
-    setAddBillingItemOpen(true);
+    setIsAddBillingItemOpen(true);
   }
 
   function closeAddBillingItemModal() {
-    setAddBillingItemOpen(false);
+    setIsAddBillingItemOpen(false);
   }
 
   /* ============================================================
@@ -75,33 +81,33 @@ function Billing() {
   /* ============================================================
      🔹 FETCH ALL BILLINGS ON FIRST LOAD
   ============================================================ */
-  useEffect(() => {
-    const fetchBilling = async () => {
-      setLoading(true);
-      setSuccessMessage('');
-      setError(null);
 
-      try {
-        const result = await getAllBilling();
-        setBilling(result.billing);
-      } catch (error) {
-        let errorMessage = '';
+  const fetchBilling = async () => {
+    setLoading(true);
+    setSuccessMessage('');
+    setError(null);
 
-        // Detailed error handling for clarity
-        if (error.response) {
-          errorMessage = error.response.data?.message || 'Server error occurred';
-        } else if (error.request) {
-          errorMessage = 'No response from server';
-        } else {
-          errorMessage = error.message;
-        }
+    try {
+      const result = await getAllBilling();
+      setBilling(result.billing);
+    } catch (error) {
+      let errorMessage = '';
 
-        setError({ message: errorMessage });
-      } finally {
-        setLoading(false);
+      // Detailed error handling for clarity
+      if (error.response) {
+        errorMessage = error.response.data?.message || 'Server error occurred';
+      } else if (error.request) {
+        errorMessage = 'No response from server';
+      } else {
+        errorMessage = error.message;
       }
-    };
 
+      setError({ message: errorMessage });
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
     fetchBilling();
   }, []);
 
@@ -210,13 +216,197 @@ function Billing() {
   };
 
   /* ============================================================
-     🔹 Open function
+     🔹 Open Add Modal function
   ============================================================ */
 
   function openAddItemModal(billing_id) {
     setSelectedBillingId(billing_id);
     setIsAddBillingItemOpen(true);
   }
+
+  /* ============================================================
+    New state: selectedBilling (hold the entire billing record)
+  ============================================================ */
+
+  const [selectedBilling, setSelectedBilling] = useState(null);
+
+  /* ============================================================
+    showUpdateBillingModal to show update modal
+  ============================================================ */
+
+  const [showUpdateBillingModal, setShowUpdateBillingModal] = useState(false);
+
+  /* ============================================================
+    edit modal states
+  ============================================================ */
+
+  const [editPaymentStatus, setEditPaymentStatus] = useState('');
+  const [isUpdateBilling, setIsUpdateBilling] = useState(false); //for disabling button /
+
+  /* ============================================================
+     🔹 Handle Billing submit modal function
+  ============================================================ */
+
+  async function handleUpdateBillingSubmit() {
+    if (!selectedBilling) return;
+
+    // prevent no-op updates
+    if (selectedBilling.payment_status === editPaymentStatus) {
+      // optional: show user "No changes detected"
+      alert('No changes detected.');
+      return;
+    }
+
+    setIsUpdateBilling(true);
+
+    try {
+      const payload = { payment_status: editPaymentStatus };
+      const result = await updateBilling(selectedBilling.billing_id, payload);
+
+      // handle expected service structure
+      if (!result || result.success === false) {
+        // show error message from result or generic
+        const msg = result?.message || 'Failed to update billing';
+        alert(msg);
+        setIsUpdateBilling(false);
+        return;
+      }
+
+      // success: close, refresh, reset
+      setShowUpdateBillingModal(false);
+      setSelectedBilling(null);
+      setEditPaymentStatus('');
+      await getAllBilling(); // refresh table (use your existing fetch function)
+
+      // optional: success toast
+      alert('Billing updated successfully.');
+    } catch (err) {
+      console.error('Update error', err);
+      alert('Failed to update billing. Check console for details.');
+    } finally {
+      setIsUpdateBilling(false);
+    }
+  }
+
+  /* ============================================================
+     🔹 Handle Toggle Finalize function
+  ============================================================ */
+
+  async function handleFinalize() {
+    if (!selectedBilling) return;
+
+    setLoading(true);
+    setSuccessMessage('');
+    setError(null);
+
+    try {
+      const result = await finalizeBilling(selectedBilling.billing_id);
+      setSuccessMessage('Billing finalized successfully!');
+      console.log('Finalized billing:', result);
+      await fetchBilling();
+
+      setShowFinalizeModal(false);
+      setSelectedBilling(null);
+    } catch (error) {
+      let errorMessage = '';
+
+      if (error.response) {
+        errorMessage = error.response.data?.message || 'Server error occurred';
+      } else if (error.request) {
+        errorMessage = 'No response from server';
+      } else {
+        errorMessage = error.message;
+      }
+      setError({ message: errorMessage });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  /* ============================================================
+     🔹 Handle Toggle Delete function
+  ============================================================ */
+
+  async function handleToggleDelete() {
+    setLoading(true);
+    setSuccessMessage('');
+    setError(null);
+
+    try {
+      const result = await toggleDeleteBilling(
+        selectedBilling.billing_id,
+        !selectedBilling.is_deleted
+      );
+      setSuccessMessage('Billing deleted successfully.');
+      console.log('Billing deleted:', result);
+      await fetchBilling();
+    } catch (error) {
+      let errorMessage = '';
+
+      if (error.response) {
+        errorMessage = error.response.data?.message || 'Server error occurred';
+      } else if (error.request) {
+        errorMessage = 'No response from server';
+      } else {
+        errorMessage = error.message;
+      }
+      setError({ message: errorMessage });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  /* ============================================================
+     🔹 Open Update Modal function
+  ============================================================ */
+
+  function openUpdateBillingModal(bill) {
+    setSelectedBilling(bill);
+    setEditPaymentStatus(bill.payment_status ?? 'pending');
+    setShowUpdateBillingModal(true);
+  }
+
+  /* ============================================================
+     🔹 Open Finalize Modal function
+  ============================================================ */
+
+  function openFinalizeBillingModal(bill) {
+    setSelectedBilling(bill);
+    setShowFinalizeModal(true);
+  }
+
+  /* ============================================================
+    New state: show delete modal )
+  ============================================================ */
+
+  const [showToggleDeleteModal, setShowToggleDeleteModal] = useState(null);
+
+  /* ============================================================
+     🔹 Open Delete Modal function
+  ============================================================ */
+
+  function openDeleteBillingModal(bill) {
+    console.log('Bill sent to modal:', bill);
+
+    setSelectedBilling(bill);
+    setShowToggleDeleteModal(true);
+  }
+
+  /* ============================================================
+     🔹 Close  Modal function
+  ============================================================ */
+
+  function closeUpdateBillingModal() {
+    setShowUpdateBillingModal(false);
+    setSelectedBilling(null);
+    setEditPaymentStatus('');
+  }
+
+  /* ============================================================
+     🔹 FINALIZE BILLING STATES
+  ============================================================ */
+
+  const [showFinalizeModal, setShowFinalizeModal] = useState(false);
 
   /* ============================================================
      🔹 EARLY RETURN FOR LOADING / ERROR
@@ -242,6 +432,7 @@ function Billing() {
             <th>Patient Name</th>
             <th>Total Amount</th>
             <th>Payment Status</th>
+            <th>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -254,6 +445,7 @@ function Billing() {
               <td>{bill.Patient?.first_name}</td>
               <td>{bill.total_amount}</td>
               <td>{bill.payment_status}</td>
+              <td>{bill.is_deleted ? 'Deleted' : 'Active'}</td>
 
               <td>
                 {/* Navigate to Items Page */}
@@ -262,7 +454,34 @@ function Billing() {
                 </button>
 
                 {/* Opens "Add Item" modal */}
-                <button onClick={() => handleSelectedBilling(bill.billing_id)}>Add Item</button>
+                <button
+                  disabled={bill.payment_status !== 'pending'}
+                  onClick={() => handleSelectedBilling(bill.billing_id)}
+                >
+                  Add Item
+                </button>
+
+                {/* Open "Edit Item" modal */}
+                <button
+                  onClick={() => openUpdateBillingModal(bill)}
+                  disabled={bill.payment_status !== 'pending'}
+                >
+                  Update
+                </button>
+                {/* Open "Finalize" modal */}
+                <button
+                  onClick={() => openFinalizeBillingModal(bill)}
+                  disabled={bill.payment_status !== 'pending'}
+                >
+                  Finalize
+                </button>
+
+                <button
+                  onClick={() => openDeleteBillingModal(bill)}
+                  disabled={bill.payment_status !== 'pending'}
+                >
+                  Delete
+                </button>
               </td>
             </tr>
           ))}
@@ -322,6 +541,39 @@ function Billing() {
             onClose={closeAddBillingItemModal}
           />
         )}
+
+        {/* ========================================================
+           UPDATE MODAL (only when open)
+        ======================================================== */}
+        <UpdateBillingModal
+          show={showUpdateBillingModal}
+          onClose={() => setShowUpdateBillingModal(false)}
+          selectedBilling={selectedBilling}
+          setSelectedBilling={setSelectedBilling}
+          editPaymentStatus={editPaymentStatus}
+          setEditPaymentStatus={setEditPaymentStatus}
+          onSubmit={handleUpdateBillingSubmit}
+        />
+
+        {/* ========================================================
+           Finalize MODAL (only when open)
+        ======================================================== */}
+        <FinalizeBillingModal
+          show={showFinalizeModal}
+          onClose={() => setShowFinalizeModal(false)}
+          selectedBilling={selectedBilling}
+          onSubmit={handleFinalize}
+        />
+
+        {/* ========================================================
+           Toggle Delete MODAL (only when open)
+        ======================================================== */}
+        <DeletBillingModal
+          show={showToggleDeleteModal}
+          onClose={() => setShowToggleDeleteModal(false)}
+          selectedBilling={selectedBilling}
+          onSubmit={handleToggleDelete}
+        />
       </div>
     </div>
   );
