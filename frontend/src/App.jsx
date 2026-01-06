@@ -10,6 +10,7 @@ import Patients from './pages/Patients';
 import Billing from './pages/Billing';
 import BillingService from './pages/Billing_service';
 import BillingItem from './pages/Billing_item';
+import Results from './pages/Results';
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
           <Route path="billing" element={<Billing />} />
           <Route path="billing_service" element={<BillingService />} />
           <Route path="billing/:billing_id/items" element={<BillingItem />} />
+          <Route path="results" element={<Results />} />
         </Route>
       </Routes>
     </Router>

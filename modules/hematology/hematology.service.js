@@ -100,6 +100,7 @@ async function getlAllHematologyResultService(is_deleted) {
       'basophils',
       'created_at',
       'updated_at',
+      'other',
     ],
     include: [
       {
@@ -142,6 +143,7 @@ async function getHematologyResultByIdService(hematology_id) {
       'monocytes',
       'eosinophils',
       'basophils',
+      'other',
       'created_at',
       'updated_at',
     ],
@@ -173,7 +175,6 @@ async function updateHematologyResultService(hematology_id, updateField) {
   }
 
   const allowedFields = [
-    'hematology_id',
     'hemoglobin',
     'hematocrit',
     'rbc_count',
@@ -187,11 +188,9 @@ async function updateHematologyResultService(hematology_id, updateField) {
     'monocytes',
     'eosinophils',
     'basophils',
-    'others',
   ];
 
-  const decimalPattern = /^\d{1,4}(\.\d{1,2})?$/;
-
+  const decimalPattern = /^[0-9]+(\.[0-9]{1,2})?$/;
   const update = {};
 
   for (const field of allowedFields) {
@@ -219,14 +218,6 @@ async function updateHematologyResultService(hematology_id, updateField) {
     update[field] = numericValue;
   }
 
-  if (update.others) {
-    if (update.others.length < 5 || update.others.length > 255) {
-      return {
-        success: false,
-        message: 'Other should not be less than 5 and be greater than 255 characters.',
-      };
-    }
-  }
   if (Object.keys(update).length === 0) {
     return { success: false, error: 'No fields provided to update.' };
   }
@@ -242,6 +233,7 @@ async function updateHematologyResultService(hematology_id, updateField) {
   const plain = refreshedHematology.get({ plain: true });
   plain.created_at = formatToPh(plain.created_at);
   plain.updated_at = formatToPh(plain.updated_at);
+  console.log('FINAL UPDATE PAYLOAD:', update);
 
   return {
     success: true,

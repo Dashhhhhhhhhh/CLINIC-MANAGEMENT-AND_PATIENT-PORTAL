@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { getPaymentStatusStyle } from '../utils/badgeStyles';
 import { useNavigate } from 'react-router-dom';
-import AddBillingItemModal from '../components/modals/AddBillingItemModal';
-import UpdateBillingModal from '../components/modals/UpdateBillingModal';
-import DeletBillingModal from '../components/modals/DeleteBillingModal';
+import AddBillingItemModal from '../components/modals/Billing/AddBillingItemModal';
+import UpdateBillingModal from '../components/modals/Billing/UpdateBillingModal';
+import DeletBillingModal from '../components/modals/Billing/DeleteBillingModal';
+import FinalizeBillingModal from '../components/modals/Billing/FinalizeBillingModal';
 
 import { useParams } from 'react-router-dom';
 
@@ -17,7 +18,6 @@ import {
   updateBilling,
 } from '../api/billing';
 import { updatedBillingService } from '../api/billing_service';
-import FinalizeBillingModal from '../components/modals/FinalizeBillingModal';
 
 function Billing() {
   /* ============================================================

@@ -118,6 +118,8 @@ async function getHematologyResultByIdController(req, res) {
 
 async function updateHematologyResultController(req, res) {
   try {
+    console.log('PARAM ID:', req.params);
+    console.log('BODY:', req.body);
     const { hematology_id } = req.params;
     const updateField = req.body;
 

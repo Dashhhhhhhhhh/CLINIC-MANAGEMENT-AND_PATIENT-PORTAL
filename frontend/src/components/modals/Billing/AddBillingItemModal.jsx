@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
-import { getAllBillingService } from '../../api/billing_service';
-import { createBillingItem } from '../../api/billingItem';
+import { getAllBillingService } from '../../../api/billing_service';
+import { createBillingItem } from '../../../api/billingItem';
 
 export default function AddBillingItemModal({
   isOpen,
@@ -25,13 +25,22 @@ export default function AddBillingItemModal({
     if (!isOpen) return;
 
     async function fetchServices() {
+      setLoading(true);
+      setSuccessMessage('');
+      setError(null);
+
       try {
-        const result = await getAllBillingService();
-        setBillingServices(result.billingService);
-        // LOG service count for debugging
-        console.log('Fetched billingServices count:', result.billingService?.length);
-      } catch (error) {
-        console.error('Failed to load services:', error);
+        if (error.response) {
+          errorMessage = error.response.data?.message || 'Server error occurred';
+        } else if (error.request) {
+          errorMessage = 'No response from server';
+        } else {
+          errorMessage = error.message;
+        }
+
+        setError({ message: errorMessage });
+      } finally {
+        setLoading(false);
       }
     }
 

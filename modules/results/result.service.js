@@ -7,6 +7,7 @@ const { TestTypes } = require('../testTypes/testTypes.model');
 const { where } = require('sequelize');
 const { formatToPh } = require('../../utils/datetime');
 const { Staff } = require('../staff/staff.model');
+const { Hematology } = require('../hematology/hematology.model');
 
 async function createResultService(
   patient_id,
@@ -325,37 +326,22 @@ async function updateResultService(result_id, updateField) {
   };
 }
 
-async function toggleResultDeleteService(result_id, is_deleted) {
+async function toggleResultDeleteService(result_id, updated_by) {
   if (!isValidUUID(result_id)) return { success: false, message: 'Invalid result ID.' };
 
   const result = await Result.findOne({ where: { result_id } });
 
   if (!result) return { success: false, message: 'Result not found.' };
 
-  const parsedDelete =
-    is_deleted === true || is_deleted === 'true'
-      ? true
-      : is_deleted === false || is_deleted === 'false'
-        ? false
-        : null;
-
-  if (parsedDelete === null)
-    return { success: false, message: 'Invalid is_deleted value. Must be true or false.' };
-
-  if (result.is_deleted === parsedDelete) {
-    return {
-      success: false,
-      message: parsedDelete ? 'Result is already deleted' : 'Result is already active',
-    };
-  }
-
-  result.is_deleted = parsedDelete;
+  result.updated_by = updated_by;
+  result.updated_at = formatToPh();
+  result.is_deleted = !result.is_deleted;
   await result.save();
 
   return {
     success: true,
-    message: parsedDelete ? 'Result deleted.' : 'Result restored.',
-    data: result.get({ plain: true }),
+    message: result.is_deleted ? 'Result deleted successfully.' : 'Result restored successfully.',
+    result: result.get({ plain: true }),
   };
 }
 

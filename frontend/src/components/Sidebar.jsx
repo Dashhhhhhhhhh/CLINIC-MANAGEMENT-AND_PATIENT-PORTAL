@@ -23,6 +23,9 @@ function Sidebar() {
         <li style={{ marginBottom: '10px' }}>
           <NavLink to="/dashboard/billing_service">Billing Service</NavLink>
         </li>
+        <li style={{ marginBottom: '10px' }}>
+          <NavLink to="/dashboard/results">Results</NavLink>
+        </li>
       </ul>
     </div>
   );

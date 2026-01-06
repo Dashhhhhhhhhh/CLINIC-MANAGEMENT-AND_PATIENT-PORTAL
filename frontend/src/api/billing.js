@@ -25,7 +25,7 @@ export async function getAllBilling() {
 export async function getBillingById(billing_id) {
   try {
     const response = await api.get(`/billing/${billing_id}`);
-    console.log('Fetched Billing', response.data);
+    console.log('Fetched billing', response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching billing.', error);
