@@ -100,7 +100,7 @@ async function getlAllHematologyResultService(is_deleted) {
       'basophils',
       'created_at',
       'updated_at',
-      'other',
+      'others',
     ],
     include: [
       {
@@ -143,7 +143,7 @@ async function getHematologyResultByIdService(hematology_id) {
       'monocytes',
       'eosinophils',
       'basophils',
-      'other',
+      'others',
       'created_at',
       'updated_at',
     ],
@@ -174,7 +174,7 @@ async function updateHematologyResultService(hematology_id, updateField) {
     return { success: false, error: 'Invalid hematology ID.' };
   }
 
-  const allowedFields = [
+  const numericFields = [
     'hemoglobin',
     'hematocrit',
     'rbc_count',
@@ -190,55 +190,95 @@ async function updateHematologyResultService(hematology_id, updateField) {
     'basophils',
   ];
 
-  const decimalPattern = /^[0-9]+(\.[0-9]{1,2})?$/;
+  const decimalPattern = /^\d{1,4}(\.\d{1,2})?$/;
+
   const update = {};
 
-  for (const field of allowedFields) {
+  // Validate numeric fields ONLY
+  for (const field of numericFields) {
     let value = updateField[field];
 
-    if (value === undefined || value === null) continue;
+    if (value === undefined || value === null || value === '') continue;
 
     const strValue = String(value).trim();
 
     if (!decimalPattern.test(strValue)) {
       return {
         success: false,
-        message: `${field} must be a valid number with up to 4 digits before the decimal and up to 2 digits after.`,
+        error: `${field} has invalid numeric format.`,
       };
     }
+
     const numericValue = Number(strValue);
 
     if (numericValue < 0) {
       return {
         success: false,
-        message: `${field} must be positive.`,
+        error: `${field} must be positive.`,
       };
     }
 
     update[field] = numericValue;
   }
 
-  if (Object.keys(update).length === 0) {
-    return { success: false, error: 'No fields provided to update.' };
+  if (updateField.others !== undefined && updateField.others !== '') {
+    update.others = String(updateField.others).trim();
   }
 
-  const updateHematology = await Hematology.update(update, {
+  if (Object.keys(update).length === 0) {
+    return { success: false, error: 'No valid fields provided to update.' };
+  }
+
+  const [affectedRows] = await Hematology.update(update, {
     where: { hematology_id },
   });
 
+  if (affectedRows === 0) {
+    return { success: false, error: 'Hematology record not found.' };
+  }
+
   const refreshedHematology = await Hematology.findByPk(hematology_id);
 
-  if (!refreshedHematology) return { success: false, error: 'Hematology not found' };
+  if (!refreshedHematology) {
+    return { success: false, error: 'Hematology not found after update.' };
+  }
+  const result = await Result.findByPk(refreshedHematology.result_id);
 
-  const plain = refreshedHematology.get({ plain: true });
-  plain.created_at = formatToPh(plain.created_at);
-  plain.updated_at = formatToPh(plain.updated_at);
-  console.log('FINAL UPDATE PAYLOAD:', update);
+  if (!result) {
+    return { success: false, error: 'Hematology not found after update.' };
+  }
 
+  const hematologySnapshot = {
+    hemoglobin: refreshedHematology.hemoglobin,
+    hematocrit: refreshedHematology.hematocrit,
+    rbc: refreshedHematology.rbc_count,
+    wbc: refreshedHematology.wbc_count,
+    platelet_count: refreshedHematology.platelet_count,
+    mch: refreshedHematology.mch,
+    mchc: refreshedHematology.mchc,
+    mcv: refreshedHematology.mcv,
+    neutrophils: refreshedHematology.neutrophils,
+    lymphocytes: refreshedHematology.lymphocytes,
+    monocytes: refreshedHematology.monocytes,
+    eosinophils: refreshedHematology.eosinophils,
+    basophils: refreshedHematology.basophils,
+    others: refreshedHematology.others,
+  };
+
+  const existingData = result.result_data || {};
+
+  const newResultData = {
+    ...existingData,
+    hematology: hematologySnapshot,
+  };
+
+  result.result_data = newResultData;
+
+  await result.save();
   return {
     success: true,
-    message: 'Hematology updated successfully.',
-    data: plain,
+    message: 'Hematology updated Successfully.',
+    data: result.get({ plain: true }),
   };
 }
 
@@ -278,10 +318,24 @@ async function toggleDeleteHematologyResultService(hematology_id, is_deleted) {
   };
 }
 
+async function getHematologyByResultIdService(result_id) {
+  if (!isValidUUID(result_id)) return { success: false, message: 'Invalid result ID.' };
+
+  const result = await Hematology.findOne({ where: { result_id } });
+
+  if (!result) return { success: false, message: 'Result ID not found.' };
+
+  return {
+    success: true,
+    data: result.get({ plain: true }),
+  };
+}
+
 module.exports = {
   createHematologyService,
   getlAllHematologyResultService,
   getHematologyResultByIdService,
   updateHematologyResultService,
   toggleDeleteHematologyResultService,
+  getHematologyByResultIdService,
 };

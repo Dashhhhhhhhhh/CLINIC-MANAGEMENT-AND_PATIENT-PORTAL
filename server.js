@@ -11,6 +11,8 @@ const sequelize = require('./db');
 app.use(express.json());
 app.use(jsonErrorHandler);
 
+app.use('/uploads', express.static('uploads'));
+
 app.use(
   cors({
     origin: '*',

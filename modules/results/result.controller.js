@@ -150,10 +150,57 @@ async function toggleResultDeleteController(req, res) {
   }
 }
 
+const uploadResultReport = async (req, res) => {
+  try {
+    const { result_id } = req.params;
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No file uploaded',
+      });
+    }
+
+    const result = await Result.findByPk(result_id);
+
+    if (!result) {
+      return res.status(404).json({
+        success: false,
+        message: 'Result not found',
+      });
+    }
+
+    result.report_file_url = `/uploads/results/${req.file.filename}`;
+    result.report_file_type = req.file.mimetype.includes('pdf') ? 'pdf' : 'docx';
+    result.report_uploaded_at = new Date();
+    result.status = 'Completed';
+
+    await result.save();
+
+    res.json({
+      success: true,
+      message: 'Report uploaded successfully',
+      data: {
+        result_id: result.result_id,
+        report_file_url: result.report_file_url,
+        report_file_type: result.report_file_type,
+        status: result.status,
+      },
+    });
+  } catch (error) {
+    console.error('Upload result report error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   createResultController,
   getAllResultController,
   getResultByIdController,
   updateResultController,
   toggleResultDeleteController,
+  uploadResultReport,
 };

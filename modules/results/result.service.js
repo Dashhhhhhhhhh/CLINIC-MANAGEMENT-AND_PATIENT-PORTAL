@@ -8,6 +8,9 @@ const { where } = require('sequelize');
 const { formatToPh } = require('../../utils/datetime');
 const { Staff } = require('../staff/staff.model');
 const { Hematology } = require('../hematology/hematology.model');
+const { Urinalysis } = require('../urinalysis/urinalysis.model');
+const { Ultrasound } = require('../ultrasound/ultrasound.model');
+const { Xray } = require('../xray/xray.model');
 
 async function createResultService(
   patient_id,
@@ -154,7 +157,9 @@ async function getAllResultService(is_deleted) {
 }
 
 async function getResultByIdService(result_id) {
-  if (!isValidUUID(result_id)) return { success: false, message: 'Invalid result ID.' };
+  if (!isValidUUID(result_id)) {
+    return { success: false, message: 'Invalid result ID.' };
+  }
 
   const result = await Result.findByPk(result_id, {
     attributes: [
@@ -170,39 +175,56 @@ async function getResultByIdService(result_id) {
     ],
     include: [
       {
-        model: Patient,
-        as: 'patient',
-        attributes: ['patient_id', 'first_name', 'last_name', 'birthdate'],
-      },
-      {
         model: TestTypes,
         as: 'TestType',
-        attributes: ['test_type_id', 'test_type_name', 'description'],
-      },
-      {
-        model: BillingItem,
-        as: 'billingItem',
-        attributes: [
-          'billing_item_id',
-          'billing_id',
-          'service_id',
-          'description',
-          'quantity',
-          'unit_price',
-          'subtotal',
-          'created_by',
-          'created_at',
-          'updated_at',
-        ],
+        attributes: ['test_type_id', 'test_type_name'],
       },
     ],
   });
 
-  if (!result) return { success: false, message: 'Result not found.' };
+  if (!result) {
+    return { success: false, message: 'Result not found.' };
+  }
 
+  const resultPlain = result.get({ plain: true });
+
+  const testTypeName = resultPlain.TestType?.test_type_name;
+
+  const handlers = {
+    hematology: async () => {
+      return await Hematology.findOne({ where: { result_id: resultPlain.result_id } });
+    },
+    urinalysis: async () => {
+      return await Urinalysis.findOne({ where: { result_id: resultPlain.result_id } });
+    },
+    ultrasound: async () => {
+      return await Ultrasound.findOne({ where: { result_id: resultPlain.result_id } });
+    },
+    xray: async () => {
+      return await Xray.findOne({ where: { result_id: resultPlain.result_id } });
+    },
+  };
+
+  const testTypeNameLower = testTypeName?.toLowerCase();
+
+  const handler = handlers[testTypeName];
+
+  const testRecord = handler ? await handler() : null;
+
+  const idKeyMap = {
+    hematology: 'hematology_id',
+    urinalysis: 'urinalysis_id',
+    ultrasound: 'ultrasound_id',
+    xray: 'xray_id',
+  };
+
+  const idKey = idKeyMap[testTypeNameLower];
+
+  resultPlain.test_record_id = idKey ? (testRecord?.[idKey] ?? null) : null;
+  resultPlain.test_record = testRecord ? (testRecord.get?.({ plain: true }) ?? testRecord) : null;
   return {
     success: true,
-    data: result.get({ plain: true }),
+    data: resultPlain,
   };
 }
 
@@ -217,18 +239,18 @@ async function updateResultService(result_id, updateField) {
     return { success: false, message: 'Result not found.' };
   }
 
-  const update = {};
-
-  const allowedFields = [
-    'result_data',
+  const allowedMetadataFields = [
     'status',
     'initial_result_by',
     'initial_result_at',
     'final_result_by',
     'final_result_at',
+    'billing_item_id',
   ];
 
-  for (const field of allowedFields) {
+  const update = {};
+
+  for (const field of allowedMetadataFields) {
     const value = updateField[field];
     if (value === undefined || value === null) continue;
 
@@ -239,18 +261,7 @@ async function updateResultService(result_id, updateField) {
         update[field] = value;
       }
     } else if (typeof value === 'object') {
-      update[field] = value;
-    }
-  }
-
-  if (update.result_data) {
-    if (
-      typeof update.result_data !== 'object' ||
-      update.result_data === null ||
-      Array.isArray(update.result_data) ||
-      Object.keys(update.result_data).length === 0
-    ) {
-      return { success: false, message: 'Invalid format for result_data.' };
+      continue;
     }
   }
 
@@ -303,13 +314,9 @@ async function updateResultService(result_id, updateField) {
     }
   }
 
-  if (Object.keys(update).length === 0) {
-    return { success: false, message: 'No fields provided to update' };
+  if (Object.keys(update).length > 0) {
+    await Result.update(update, { where: { result_id } });
   }
-
-  const updateResult = await Result.update(update, {
-    where: { result_id },
-  });
 
   const refreshedResult = await Result.findByPk(result_id);
 

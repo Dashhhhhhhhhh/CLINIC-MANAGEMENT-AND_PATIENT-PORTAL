@@ -4,6 +4,7 @@ const {
   getHematologyResultByIdService,
   updateHematologyResultService,
   toggleDeleteHematologyResultService,
+  getHematologyByResultIdService,
 } = require('./hematology.service');
 const { formatToPh } = require('../../utils/datetime');
 const { format } = require('sequelize/lib/utils');
@@ -120,6 +121,7 @@ async function updateHematologyResultController(req, res) {
   try {
     console.log('PARAM ID:', req.params);
     console.log('BODY:', req.body);
+    console.log('UPDATE WHERE hematology_id =', req.params.hematology_id);
     const { hematology_id } = req.params;
     const updateField = req.body;
 
@@ -163,10 +165,30 @@ async function toggleDeleteHematologyResultController(req, res) {
   }
 }
 
+async function getHematologyByResultIdController(req, res) {
+  try {
+    const { result_id } = req.params;
+
+    const result = await getHematologyByResultIdService(result_id);
+
+    if (!result.success) {
+      if (result.message === 'Result not found.') {
+        return res.status(404).json(result);
+      }
+      return res.status(400).json(result);
+    }
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error('Error in getHematologyByResultIdController:', err);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+}
+
 module.exports = {
   createHematologyResultController,
   getlAllHematologyResultController,
   getHematologyResultByIdController,
   updateHematologyResultController,
   toggleDeleteHematologyResultController,
+  getHematologyByResultIdController,
 };

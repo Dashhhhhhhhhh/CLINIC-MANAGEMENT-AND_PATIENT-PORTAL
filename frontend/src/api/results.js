@@ -41,3 +41,20 @@ export async function deleteResult(result_id, is_deleted) {
     throw error;
   }
 }
+
+export async function updateHematologyResult(hematologyId, payload) {
+  try {
+    console.log('PATCH request →', hematologyId, payload);
+    const res = await api.patch(`http://localhost:3000/hematology/${hematologyId}`, payload);
+
+    return {
+      success: true,
+      message: 'Hematology result updated successfully.',
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: err.response?.data?.message || 'Update failed.',
+    };
+  }
+}

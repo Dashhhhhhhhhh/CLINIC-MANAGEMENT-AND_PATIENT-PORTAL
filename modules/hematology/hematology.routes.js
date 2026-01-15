@@ -7,11 +7,14 @@ const {
   getHematologyResultByIdController,
   updateHematologyResultController,
   toggleDeleteHematologyResultController,
+  getHematologyByResultIdController,
 } = require('./hematology.controller');
 
 router.post('/', createHematologyResultController);
 
 router.get('/', getlAllHematologyResultController);
+
+router.get('/by-result/:result_id', getHematologyByResultIdController);
 
 router.get('/:hematology_id', getHematologyResultByIdController);
 

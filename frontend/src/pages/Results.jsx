@@ -3,14 +3,14 @@ import { useState, useEffect } from 'react';
 import { createResult, getAllResult, getResultById, deleteResult } from '../api/results';
 import ViewResultModal from '../components/modals/Results/ViewResultModal';
 import DeleteResultModal from '../components/modals/Results/DeleteResultModal';
-import UpdateHematologyModal from '../components/modals/Results/update/UpdateHematologyModal';
+import UpdateResultModal from '../components/modals/Results/update/UpdateResultModal';
 
 function Result() {
   /* ============================================================
      🔹 MAIN BILLING LIST STATE
      - billing: stores all billing records
      - loading: controls loading display
-     - successMessage / error: feedback for create operations
+     - successMessage / error: feedback for create operatiorns
   ============================================================ */
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -130,25 +130,27 @@ function Result() {
      🔹 Open Update Modal function
   ============================================================ */
 
-  const [activeUpdateType, setActiveUpdateType] = useState(null);
-
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
 
   /* ============================================================
      🔹 Open update Modal function
   ============================================================ */
 
-  function openUpdateModal(result) {
-    setSelectedResult(result);
-    setActiveUpdateType(result.test_type_name);
-    setIsUpdateModalOpen(true);
-  }
+  const openUpdateModal = async row => {
+    try {
+      const rest = await getResultById(row.result_id);
 
-  function closeUpdateModal() {
+      setSelectedResult(rest.data);
+      setIsUpdateModalOpen(true);
+    } catch (err) {
+      console.error('Failed to load full result', err);
+    }
+  };
+
+  const closeUpdateModal = () => {
     setIsUpdateModalOpen(false);
-    setActiveUpdateType(null);
-    setSelectedResult(null);
-  }
+    setSelectedResult(null); // optional, but OK here
+  };
 
   /* ============================================================
      🔹 HANDLER FOR onUpdated
@@ -246,14 +248,16 @@ function Result() {
         onSubmit={handleToggleDelete}
         onClose={() => closeDeleteResultItemModal(false)}
       />
-      {isUpdateModalOpen ? (
-        <UpdateHematologyModal
+      {isUpdateModalOpen && selectedResult && (
+        <UpdateResultModal
           isOpen={isUpdateModalOpen}
-          selectedResult={selectedResult}
           onClose={closeUpdateModal}
-          onUpdated={handleUpdateSuccess}
+          onSuccess={handleUpdateSuccess}
+          testRecord={selectedResult?.test_record}
+          recordId={selectedResult?.test_record_id}
+          testType={selectedResult?.TestType?.test_type_name}
         />
-      ) : null}
+      )}
     </div>
   );
 }
