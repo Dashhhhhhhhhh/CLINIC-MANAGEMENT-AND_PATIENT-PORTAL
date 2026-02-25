@@ -1,0 +1,16 @@
+/* Staff page: table + details side-by-side */
+.staff-page__table {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 16px;
+  align-items: start;
+}
+
+/* Right-side panel */
+.staff-details-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  min-height: 200px;
+}

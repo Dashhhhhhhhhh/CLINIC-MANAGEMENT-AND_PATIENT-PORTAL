@@ -1,0 +1,100 @@
+.patients-table__name-link {
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.patients-table__name-link:hover {
+  text-decoration: underline;
+}
+.patients-table__actions {
+  text-align: right;
+}
+
+.patients-table__status-cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+/* Patients table-specific sizing and alignment */
+.table-ui.patients-table {
+  table-layout: fixed;
+}
+
+.patients-table th:nth-child(1),
+.patients-table td:nth-child(1) {
+  width: 50%;
+}
+
+.patients-table th:nth-child(2),
+.patients-table td:nth-child(2) {
+  width: 30%;
+}
+
+.patients-table th:nth-child(3),
+.patients-table td:nth-child(3) {
+  width: 120px;
+}
+
+.patients-table__status-cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.patients-table__name-link {
+  cursor: pointer;
+}
+
+/* Switch button (table quick action) */
+.switch-btn {
+  position: relative;
+  width: 42px;
+  height: 24px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.switch-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Switch track */
+.switch-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: #cbd5e1;
+  transition: 0.15s ease;
+}
+
+/* Switch thumb */
+.switch-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #fff;
+  transition: 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* ON state */
+.switch-btn[aria-pressed='true'] .switch-track {
+  background: #22c55e;
+}
+
+.switch-btn[aria-pressed='true'] .switch-thumb {
+  transform: translateX(18px);
+}

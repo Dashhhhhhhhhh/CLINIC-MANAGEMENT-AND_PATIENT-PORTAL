@@ -1,65 +1,140 @@
 import { useState, useEffect } from 'react';
 
-import { createResult, getAllResult, getResultById, deleteResult } from '../api/results';
+import { getResultsList, getResultById, deleteResult } from '../api/results';
+import { getAllTestTypes } from '../api/testTypes';
+
 import ViewResultModal from '../components/modals/Results/ViewResultModal';
 import DeleteResultModal from '../components/modals/Results/DeleteResultModal';
 import UpdateResultModal from '../components/modals/Results/update/UpdateResultModal';
+import CreateResultModal from '../components/modals/Results/CreateResultModal.jsx';
 
+import '../components/CSS/shared-ui.css';
 function Result() {
-  /* ============================================================
-     🔹 MAIN BILLING LIST STATE
-     - billing: stores all billing records
-     - loading: controls loading display
-     - successMessage / error: feedback for create operatiorns
-  ============================================================ */
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [successMessage, setSuccessMessage] = useState('');
   const [error, setError] = useState(null);
+  const [viewLoading, setViewLoading] = useState(false);
 
-  /* ============================================================
-     🔹 DROPDOWN — SELECT RESULT ID 
-  ============================================================ */
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [meta, setMeta] = useState(null);
 
-  const [selectedResultId, setSelectedResultId] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  /* ============================================================
-     🔹 FETCH ALL RESULTS ON FIRST LOAD 
-  ============================================================ */
+  const [testTypeId, setTestTypeId] = useState('');
+  const [testTypes, setTestTypes] = useState([]);
+  const [isTestypeLoading, setIsTestTypeLoading] = useState(false);
+
+  const [selectedResult, setSelectedResult] = useState(null);
+  const [isDeleteResultItemOpen, setIsDeleteResultItemOpen] = useState(false);
+
+  const [isViewResultItemOpen, setIsViewResultItemOpen] = useState(false);
+
+  const [sortOrder, setSortOrder] = useState('DESC');
+
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 300);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm]);
+
+  const handleSearchChange = e => {
+    setSearchTerm(e.target.value);
+    setPage(1);
+    setMeta(null);
+  };
+
+  const handleTestTypeChange = value => {
+    setTestTypeId(value);
+    setPage(1);
+    setMeta(null);
+  };
+
+  const buildParams = () => {
+    const params = {
+      page,
+      limit,
+    };
+
+    if (debouncedSearch && debouncedSearch.trim() !== '') {
+      params.search = debouncedSearch.trim();
+    }
+
+    if (testTypeId) {
+      params.test_type_id = testTypeId;
+    }
+
+    return params;
+  };
 
   const fetchResult = async () => {
     setLoading(true);
-    setSuccessMessage('');
     setError(null);
 
     try {
-      const result = await getAllResult();
-      console.log('API response:', result);
-      setResults(result.data);
-    } catch (error) {
-      let errorMessage = '';
-
-      // Detailed error handling for clarity
-      if (error.response) {
-        errorMessage = error.response.data?.message || 'Server error occurred';
-      } else if (error.request) {
-        errorMessage = 'No response from server';
+      const result = await getResultsList(buildParams());
+      if (result.success) {
+        setResults(result.results);
+        setMeta(result.meta);
       } else {
-        errorMessage = error.message;
+        setError({ type: 'FETCH_FAILED', message: result.message });
       }
-
-      setError({ message: errorMessage });
+    } catch (error) {
+      setError({ type: 'FETCH_ERROR', message: error.message });
     } finally {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchResult();
-  }, []);
+  }, [debouncedSearch, page, limit, testTypeId]);
 
-  /* ============================================================
-     🔹 Handle Toggle Delete function
-  ============================================================ */
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchTestTypes = async () => {
+      setIsTestTypeLoading(true);
+      setError(null);
+
+      console.log('testTypes state:', testTypes);
+
+      try {
+        const result = await getAllTestTypes();
+        console.log('Fetched test types:', result);
+
+        if (isMounted) {
+          setTestTypes(result.data);
+          setError(null);
+        }
+      } catch (err) {
+        console.error('Failed to fetch test types:', err);
+        if (isMounted) {
+          setError({ type: 'FETCH_FAILED', message: 'Failed to fetch test types.' });
+          setTestTypes([]);
+        }
+      } finally {
+        if (isMounted) {
+          setIsTestTypeLoading(false);
+        }
+      }
+    };
+
+    fetchTestTypes();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   async function handleToggleDelete() {
     if (!selectedResult) return;
@@ -90,31 +165,44 @@ function Result() {
       setLoading(false);
     }
   }
-  /* ============================================================
-     🔹 VIEW RESULT MODAL OPEN/CLOSE CONTROL
-  ============================================================ */
-  const [isViewResultItemOpen, setIsViewResultItemOpen] = useState(false);
 
   function closeViewResultItemModal() {
     setIsViewResultItemOpen(false);
-    setSelectedResultId(null);
+    setSelectedResult(null);
   }
 
-  /* ============================================================
-     🔹 Open View Modal function
-  ============================================================ */
+  async function openViewResultModal(result_id) {
+    setError(null);
+    setViewLoading(true);
+    try {
+      const result = await getResultById(result_id);
 
-  function openViewResultModal(result_id) {
-    setSelectedResultId(result_id);
-    setIsViewResultItemOpen(true);
+      if (result.success) {
+        setSelectedResult(result.data);
+        setIsViewResultItemOpen(true);
+      } else {
+        setError({ message: result.message || 'Result not found' });
+      }
+    } catch (error) {
+      let errorMessage = '';
+
+      if (error.response) {
+        errorMessage =
+          error.response.data?.message || error.response.data?.error || 'Server error occurred';
+        console.error('Backend error:', errorMessage);
+      } else if (error.request) {
+        errorMessage = 'No response from server';
+        console.error('Network error:', errorMessage);
+      } else {
+        errorMessage = error.message;
+        console.error('Unexpected error:', errorMessage);
+      }
+
+      setError({ message: errorMessage });
+    } finally {
+      setViewLoading(false);
+    }
   }
-
-  /* ============================================================
-     🔹 Open Delete Modal function
-  ============================================================ */
-
-  const [selectedResult, setSelectedResult] = useState(null);
-  const [isDeleteResultItemOpen, setIsDeleteResultItemOpen] = useState(false);
 
   function openDeleteResultModal(result) {
     setSelectedResult(result);
@@ -125,16 +213,6 @@ function Result() {
     setIsDeleteResultItemOpen(false);
     setSelectedResult(null);
   }
-
-  /* ============================================================
-     🔹 Open Update Modal function
-  ============================================================ */
-
-  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-
-  /* ============================================================
-     🔹 Open update Modal function
-  ============================================================ */
 
   const openUpdateModal = async row => {
     try {
@@ -149,105 +227,218 @@ function Result() {
 
   const closeUpdateModal = () => {
     setIsUpdateModalOpen(false);
-    setSelectedResult(null); // optional, but OK here
+    setSelectedResult(null);
   };
-
-  /* ============================================================
-     🔹 HANDLER FOR onUpdated
-  ============================================================ */
 
   function handleUpdateSuccess() {
     fetchResult();
     closeUpdateModal();
   }
 
-  /* ============================================================
-     🔹 EARLY RETURN FOR LOADING / ERROR
-  ============================================================ */
-  if (loading) return <p>Loading Results...</p>;
-  if (error) return <p>Error: {error.message}</p>;
-
-  /* ============================================================
-     🔹 JSX STARTS HERE
-     Display billing list, create billing form, and modal
-  ============================================================ */
   return (
-    <div>
-      {/* ========================================================
-          RESULT TABLE (LIST OF ALL RESULTS)
-      ======================================================== */}
-      <h2>Result Lists</h2>
-      <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-        <thead>
-          <tr>
-            <th>Result ID</th>
-            <th>Patient ID</th>
-            <th>Result Type</th>
-            <th>Status</th>
-            <th>Created By</th>
-            <th>Active Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
+    <div className="page">
+      {/* ================= PAGE HEADER ================= */}
+      <div className="page__header">
+        <h2 className="page__title">Result Lists</h2>
 
-        <tbody>
-          {results.length === 0 ? (
-            <tr>
-              <td colSpan={7}>No results to show</td>
+        <button className="btn btn--primary" onClick={() => setIsCreateOpen(true)}>
+          Create Result
+        </button>
+      </div>
+
+      {/* ================= FILTERS ROW ================= */}
+      <div className="page__controls">
+        {/* Test Type Filter */}
+        <div className="control">
+          <label className="control__label">Test Type</label>
+          <select
+            className="control__select"
+            value={testTypeId}
+            onChange={e => handleTestTypeChange(e.target.value)}
+            disabled={isTestypeLoading}
+          >
+            <option value="">{isTestypeLoading ? 'Loading test types…' : 'All test types'}</option>
+
+            {testTypes.map(type => (
+              <option key={type.test_type_id} value={type.test_type_id}>
+                {type.test_type_name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Search */}
+        <div className="control control--grow">
+          <label className="control__label">Search</label>
+          <input
+            className="control__input"
+            type="text"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            placeholder="Search patient or test type…"
+          />
+        </div>
+
+        {/* Sort by Date */}
+        <div className="control">
+          <label className="control__label">Sort</label>
+          <select
+            className="control__select"
+            value={sortOrder}
+            onChange={e => {
+              setSortOrder(e.target.value);
+              setPage(1);
+              setMeta(null);
+            }}
+          >
+            <option value="DESC">Newest first</option>
+            <option value="ASC">Oldest first</option>
+          </select>
+        </div>
+
+        {/* Clear Filters */}
+        <div className="control control--button">
+          <button
+            className="btn btn--secondary"
+            disabled={loading}
+            onClick={() => {
+              setSearchTerm('');
+              setTestTypeId('');
+              setSortOrder('DESC');
+              setPage(1);
+              setMeta(null);
+            }}
+          >
+            Clear
+          </button>
+        </div>
+      </div>
+
+      {/* ================= TABLE CARD ================= */}
+      <div className="table-card">
+        <table className="table-ui">
+          <thead className="table-ui__thead">
+            <tr className="table-ui__tr">
+              <th className="table-ui__th">Result ID</th>
+              <th className="table-ui__th">Patient</th>
+              <th className="table-ui__th">Result Type</th>
+              <th className="table-ui__th">Created By</th>
+              <th className="table-ui__th">Status</th>
+              <th className="table-ui__th table-ui__th--actions">Actions</th>
             </tr>
-          ) : (
-            results.map(r => {
-              const patientName = [r.patient?.first_name, r.patient?.last_name]
-                .filter(n => n && n.trim() !== '')
-                .join(' ');
+          </thead>
 
-              const displayPatient = patientName.length > 0 ? patientName : 'Patient unavailable';
-              return (
-                <tr key={r.result_id}>
-                  <td>{r.result_id}</td>
-                  <td>{displayPatient}</td>
-                  <td>{r.TestType ? `${r.TestType.test_type_name}` : 'Test type unavailable'}</td>
-                  <td>{r.status}</td>
-                  <td>{r.created_by}</td>
-                  <td>{r.is_deleted ? 'Deleted' : 'Active'}</td>
+          <tbody className="table-ui__tbody">
+            {results.length === 0 ? (
+              <tr className="table-ui__tr table-ui__tr--empty">
+                <td colSpan={6} className="table-ui__td table-ui__td--empty">
+                  No results to show
+                </td>
+              </tr>
+            ) : (
+              results.map(r => {
+                const patientName = [r.patient?.first_name, r.patient?.last_name]
+                  .filter(n => n && n.trim() !== '')
+                  .join(' ');
 
-                  <td>
-                    {/* Open "View Result" modal */}
-                    <button
-                      disabled={r.is_deleted === true}
-                      onClick={() => openViewResultModal(r.result_id)}
-                    >
-                      View Result
-                    </button>
-                    {/* Open "Delete Result" modal */}
-                    <button onClick={() => openDeleteResultModal(r)}>
-                      {r.is_deleted ? 'Restore' : 'Delete'}
-                    </button>
-                    {/* Open "Update Result" modal */}
-                    {!r.is_deleted && r.TestType.test_type_name === 'hematology' && (
-                      <button onClick={() => openUpdateModal(r)}>Update</button>
-                    )}
-                  </td>
-                </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
-      {/* ========================================================
-           Toggle Delete MODAL (only when open)
-        ======================================================== */}
+                const displayPatient = patientName.length > 0 ? patientName : 'Patient unavailable';
+
+                return (
+                  <tr key={r.result_id} className="table-ui__tr">
+                    <td className="table-ui__td">{r.result_id}</td>
+
+                    <td className="table-ui__td">
+                      <span className="table-ui__primary">{displayPatient}</span>
+                    </td>
+
+                    <td className="table-ui__td">
+                      {r.TestType ? r.TestType.test_type_name : 'Test type unavailable'}
+                    </td>
+
+                    <td className="table-ui__td">{r.created_by}</td>
+
+                    <td className="table-ui__td">
+                      <span
+                        className={`status-badge ${
+                          r.is_deleted ? 'status-badge--deleted' : 'status-badge--active'
+                        }`}
+                      >
+                        {r.is_deleted ? 'Deleted' : 'Active'}
+                      </span>
+                    </td>
+
+                    <td className="table-ui__td table-ui__td--actions">
+                      <div className="table-actions">
+                        <button
+                          className="btn btn--ghost"
+                          disabled={r.is_deleted}
+                          onClick={() => openViewResultModal(r.result_id)}
+                        >
+                          View
+                        </button>
+
+                        <button
+                          className="btn btn--danger"
+                          onClick={() => openDeleteResultModal(r)}
+                        >
+                          {r.is_deleted ? 'Restore' : 'Delete'}
+                        </button>
+
+                        {!r.is_deleted && r.TestType?.test_type_name === 'hematology' && (
+                          <button className="btn btn--primary" onClick={() => openUpdateModal(r)}>
+                            Update
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ================= PAGINATION ================= */}
+      {meta && meta.total > 0 && (
+        <div className="table-ui__pagination">
+          <button
+            className="btn btn--secondary"
+            disabled={loading || error || !meta?.hasPrevPage}
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+          >
+            Prev
+          </button>
+
+          <span className="pagination__info">
+            Page {meta?.page ?? 1} of {meta?.totalPages ?? 0}
+          </span>
+
+          <button
+            className="btn btn--secondary"
+            disabled={loading || error || !meta?.hasNextPage}
+            onClick={() => setPage(p => p + 1)}
+          >
+            Next
+          </button>
+        </div>
+      )}
+
+      {/* ================= MODALS ================= */}
       <ViewResultModal
         isOpen={isViewResultItemOpen}
-        resultId={selectedResultId}
-        onClose={() => closeViewResultItemModal(false)}
+        onClose={closeViewResultItemModal}
+        result={selectedResult}
+        loading={viewLoading}
       />
+
       <DeleteResultModal
         isOpen={isDeleteResultItemOpen}
         selectedResult={selectedResult}
         onSubmit={handleToggleDelete}
         onClose={() => closeDeleteResultItemModal(false)}
       />
+
       {isUpdateModalOpen && selectedResult && (
         <UpdateResultModal
           isOpen={isUpdateModalOpen}
@@ -257,6 +448,9 @@ function Result() {
           recordId={selectedResult?.test_record_id}
           testType={selectedResult?.TestType?.test_type_name}
         />
+      )}
+      {isCreateOpen && (
+        <CreateResultModal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
       )}
     </div>
   );

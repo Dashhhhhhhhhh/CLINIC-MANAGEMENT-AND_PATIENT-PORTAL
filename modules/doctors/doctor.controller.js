@@ -53,7 +53,30 @@ async function registerDoctorController(req, res) {
 
 async function getAllDoctorController(req, res) {
   try {
-    const result = await getAllDoctorService();
+    const { page, limit, search, active, specialization_id, sortBy, sortOrder } = req.query;
+
+    let parsedActive;
+    const activeNorm = typeof active === 'string' ? active.toLowerCase() : active;
+    if (activeNorm === 'true' || activeNorm === '1') parsedActive = true;
+    else if (activeNorm === 'false' || activeNorm === '0') parsedActive = false;
+    else parsedActive = undefined;
+
+    const specializationIdNorm =
+      typeof specialization_id === 'string' && specialization_id.trim() === ''
+        ? undefined
+        : specialization_id;
+
+    const searchNorm = typeof search === 'string' ? search.trim() : '';
+
+    const result = await getAllDoctorService({
+      page,
+      limit,
+      search: searchNorm,
+      active: parsedActive,
+      specialization_id: specializationIdNorm,
+      sortBy,
+      sortOrder,
+    });
 
     return res.status(200).json(result);
   } catch (err) {

@@ -2,17 +2,18 @@ import api from './axios';
 
 export async function createResult(payload) {
   try {
-    const response = await api.post('results', payload);
+    const response = await api.post('/results', payload);
     console.log('Result created:', response.data);
+    return response.data;
   } catch (error) {
     console.error('Error creating result.', error);
     throw error;
   }
 }
 
-export async function getAllResult() {
+export async function getResultsList(params = {}) {
   try {
-    const response = await api.get('/results');
+    const response = await api.get('/results', { params });
     console.log('Fetched results', response.data);
     return response.data;
   } catch (error) {
@@ -44,8 +45,7 @@ export async function deleteResult(result_id, is_deleted) {
 
 export async function updateHematologyResult(hematologyId, payload) {
   try {
-    console.log('PATCH request →', hematologyId, payload);
-    const res = await api.patch(`http://localhost:3000/hematology/${hematologyId}`, payload);
+    const res = await api.patch(`hematology/${hematologyId}`, payload);
 
     return {
       success: true,
@@ -56,5 +56,39 @@ export async function updateHematologyResult(hematologyId, payload) {
       success: false,
       message: err.response?.data?.message || 'Update failed.',
     };
+  }
+}
+
+export async function getLatestResults(patientId) {
+  try {
+    const response = await api.get(`/results/latest/${patientId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching latest patient results.', error);
+    throw error;
+  }
+}
+
+export async function getPatientResultHistory(patientId, params) {
+  try {
+    const response = await api.get(`/results/${patientId}/results`, {
+      params,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching all patients results.', error);
+    throw error;
+  }
+}
+
+export async function getWorklistResults(params = {}) {
+  try {
+    const response = await api.get(`/results/worklist`, {
+      params,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching worklist results.', error);
+    throw error;
   }
 }

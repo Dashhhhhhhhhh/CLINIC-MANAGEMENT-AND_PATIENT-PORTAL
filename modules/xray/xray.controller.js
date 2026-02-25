@@ -9,31 +9,22 @@ const {
 
 async function createXrayController(req, res) {
   try {
-    const { result_id, xray_type, history, comparison, technique, findings, impression, remarks } =
-      req.body;
+    const { result_id, data } = req.body;
 
-    const xray = await createXrayService(result_id, {
-      xray_type,
-      history,
-      comparison,
-      technique,
-      findings,
-      impression,
-      remarks,
-    });
-    const data = xray.data;
+    const xray = await createXrayService(result_id, data);
 
-    data.created_at = formatToPh(data.created_at);
-    data.updated_at = formatToPh(data.updated_at);
+    if (xray.created_at) xray.created_at = formatToPh(xray.created_at);
+    if (xray.updated_at) xray.updated_at = formatToPh(xray.updated_at);
 
     return res.status(201).json({
-      ...xray,
-      data: data,
+      success: true,
+      data: xray,
     });
   } catch (error) {
     console.error('Error creating x-ray result:', error.message);
     if (error.errors) console.error(error.errors);
     if (error.parent) console.error(error.parent);
+
     return res.status(500).json({
       success: false,
       error: 'Server error while creating x-ray result.',

@@ -74,7 +74,7 @@ const Result = sequelize.define(
     },
     billing_item_id: {
       type: DataTypes.UUID,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: { tableName: 'billing_item', schema: 'billing_table' },
       },

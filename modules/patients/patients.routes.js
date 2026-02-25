@@ -17,7 +17,7 @@ router.get('/available-users', getAvailablePatientUsersController);
 
 router.get('/:id', getPatientByIdController);
 
-router.patch('/:patient_id', updatePatientController);
 router.patch('/:id/status', togglePatientStatusController);
+router.patch('/:patient_id', updatePatientController);
 
 module.exports = router;

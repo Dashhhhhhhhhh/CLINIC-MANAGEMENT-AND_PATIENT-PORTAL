@@ -9,35 +9,16 @@ const {
 
 async function createUltrasoundController(req, res) {
   try {
-    const {
-      result_id,
-      ultrasound_type,
-      history,
-      comparison,
-      technique,
-      findings,
-      impression,
-      remarks,
-    } = req.body;
+    const { result_id, data } = req.body;
 
-    const ultrasound = await createUltrasoundService(result_id, {
-      ultrasound_type,
-      history,
-      comparison,
-      technique,
-      findings,
-      impression,
-      remarks,
-    });
+    const ultrasound = await createUltrasoundService(result_id, data);
 
-    const data = ultrasound.data;
-
-    data.created_at = formatToPh(data.created_at);
-    data.updated_at = formatToPh(data.updated_at);
+    if (ultrasound.created_at) ultrasound.created_at = formatToPh(ultrasound.created_at);
+    if (ultrasound.updated_at) ultrasound.updated_at = formatToPh(ultrasound.updated_at);
 
     return res.status(201).json({
-      ...ultrasound,
-      data: data,
+      success: true,
+      data: ultrasound,
     });
   } catch (error) {
     console.error('Error ultrasound ultrasound result:', error.message);

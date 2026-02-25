@@ -12,6 +12,8 @@ const { Specialization } = require('../specialization/specialization.model');
 const { Result } = require('pg');
 const { getAvailableUsersByModel } = require('../../utils/helpers/getAvailableUsers');
 
+const { Op } = require('sequelize');
+
 async function registerDoctorService(
   user_id,
   first_name,
@@ -113,18 +115,55 @@ async function registerDoctorService(
   return {
     success: true,
     message: 'Doctor created successfully',
-    doctor: newDoctor,
+    data: newDoctor,
   };
 }
 
-async function getAllDoctorService(active, specialization_id) {
+async function getAllDoctorService({
+  page = 1,
+  limit = 10,
+  search = '',
+  active,
+  sortBy = 'created_at',
+  sortOrder = 'desc',
+  specialization_id,
+}) {
+  const safeLimit = Math.min(Number(limit) || 10, 20);
+  const safePage = Math.max(Number(page) || 1, 1);
+  const offset = (safePage - 1) * safeLimit;
+
+  const VALID_SORT_ORDERS = ['ASC', 'DESC'];
+  const order = String(sortOrder || 'DESC').toUpperCase();
+  const safeOrder = VALID_SORT_ORDERS.includes(order) ? order : 'DESC';
+
   const whereClause = {};
 
-  if (active !== undefined) whereClause.active = active;
+  if (active !== undefined) {
+    const activeStr = String(active).toLowerCase();
+    if (activeStr === 'true') whereClause.active = true;
+    else if (activeStr === 'false') whereClause.active = false;
+  }
+
   if (specialization_id !== undefined) whereClause.specialization_id = specialization_id;
 
-  const result = await Doctor.findAll({
+  if (search) {
+    whereClause[Op.or] = [
+      { first_name: { [Op.iLike]: `%${search}%` } },
+      { last_name: { [Op.iLike]: `%${search}%` } },
+      { license_number: { [Op.iLike]: `%${search}%` } },
+    ];
+  }
+
+  const allowedSortFields = ['created_at', 'first_name', 'license_number', 'active'];
+
+  const sortField = allowedSortFields.includes(sortBy) ? sortBy : 'created_at';
+
+  const { rows, count } = await Doctor.findAndCountAll({
     where: whereClause,
+    limit: safeLimit,
+    offset,
+    order: [[sortField, safeOrder]],
+    distinc: true,
     attributes: [
       'doctor_id',
       'first_name',
@@ -149,12 +188,23 @@ async function getAllDoctorService(active, specialization_id) {
     ],
   });
 
+  const total = count;
+  const totalPages = Math.max(1, Math.ceil(total / safeLimit));
+
   return {
     success: true,
-    count: result.length,
-    doctor: result.map(doc => doc.get({ plain: true })),
+    meta: {
+      total,
+      page: safePage,
+      limit: safeLimit,
+      totalPages,
+      hasPrevPage: safePage > 1,
+      hasNextPage: safePage < totalPages,
+    },
+    data: rows.map(r => r.get({ plain: true })),
   };
 }
+
 async function getDoctorByIdService(doctor_id) {
   if (!isValidUUID(doctor_id)) {
     return { success: false, message: 'Invalid doctors id.' };
@@ -179,7 +229,7 @@ async function getDoctorByIdService(doctor_id) {
 
   return {
     success: true,
-    doctor: doctor.get({ plain: true }),
+    data: doctor.get({ plain: true }),
   };
 }
 
@@ -279,7 +329,7 @@ async function updateDoctorService(doctor_id, updateField) {
   return {
     success: true,
     message: 'Doctor updated succcessfully.',
-    updateDoctor: refreshDoctor.get({ plain: true }),
+    data: refreshDoctor.get({ plain: true }),
   };
 }
 
@@ -303,12 +353,17 @@ async function toggleDoctorStatusService(doctor_id, active) {
   return {
     success: true,
     message: doctor.active ? 'Doctor activated successfully.' : 'Doctor deactivated successfully.',
-    doctor: doctor.get({ plain: true }),
+    data: doctor.get({ plain: true }),
   };
 }
 
 async function getAvailableDoctorUsersService() {
-  return await getAvailableUsersByModel(Doctor);
+  try {
+    return await getAvailableUsersByModel(Doctor);
+  } catch (err) {
+    console.error('Error in getAvailableDoctorUsersService:', err);
+    return { success: false, message: err.message };
+  }
 }
 
 module.exports = {

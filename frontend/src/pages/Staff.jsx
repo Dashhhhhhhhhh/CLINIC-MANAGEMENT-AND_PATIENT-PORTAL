@@ -1,507 +1,349 @@
 import { useState, useEffect } from 'react';
-import {
-  createStaff,
-  getAllStaff,
-  getStaffById,
-  updateStaff,
-  toggleActiveStaff,
-  getAvailablePosition,
-} from '../api/staff';
+
+import { getAllStaff, toggleActiveStaff, getStaffById, getAvailablePosition } from '../api/staff';
+
+import CreateStaffModal from '../components/modals/Staff/CreateStaffModal';
+import EditStaffModal from '../components/modals/Staff/EditStaffModal';
+
+import '../components/CSS/shared-ui.css';
+import '../components/CSS/Staff.css';
 
 function Staff() {
   // State Variables
-
-  // fetchAll Variables
   const [staff, setStaff] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [successMessage, setSuccessMessage] = useState('');
   const [error, setError] = useState(null);
+  const [isStaffLoading, setIsStaffLoading] = useState(true);
 
-  // handleAdd Variables
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  const [addStaff, setAddStaff] = useState({
-    user_id: '',
-    first_name: '',
-    middle_initial: '',
-    last_name: '',
-    employee_number: '',
-    contact_number: '',
-    position_id: '',
-  });
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [flashStaffId, setFlashStaffId] = useState(null);
+  const [togglingStaffId, setTogglingStaffId] = useState(null);
 
-  // dropdown Position Variables
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [meta, setMeta] = useState(null);
 
-  const [selectedPosition, setSelectedPosition] = useState('');
-  const [availablePosition, setAvailablePosition] = useState([]);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  // dropdown User Variables
-  const [selectedUserId, setSelectedUserId] = useState('');
-  const [availableUsers, setAvailableUsers] = useState([]);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [selectedStaff, setSelectedStaff] = useState(null);
+  const [selectedStaffId, setSelectedStaffId] = useState(null);
 
-  // getStaffById Variables
+  const [isDetailsLoading, setIsDetailsLoading] = useState(false);
 
-  const [staffId, setStaffId] = useState('');
-  const [selectedStaff, setSelectedStaff] = useState('');
+  // Debounce effect
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 300);
 
-  // Fetch Staff (Initial Load)
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm]);
+
+  // Reset page on new search
+  const handleSearchChange = e => {
+    setSearchTerm(e.target.value);
+    setPage(1);
+    setMeta(null);
+    setSelectedStaff(null);
+    setSelectedStaffId(null);
+  };
 
   useEffect(() => {
+    if (!flashStaffId) return;
+
+    const t = setTimeout(() => setFlashStaffId(null), 1200);
+    return () => clearTimeout(t);
+  }, [flashStaffId]);
+
+  // Fetch Staff (Initial Load)
+  useEffect(() => {
+    let isMounted = true;
+
     const fetchStaffs = async () => {
-      setLoading(true);
-      setSuccessMessage('');
+      setIsStaffLoading(true);
       setError(null);
 
       try {
-        const result = await getAllStaff();
-        setStaff(result.staff);
-      } catch (error) {
-        let errorMessage = '';
-
-        if (error.response) {
-          errorMessage = error.response.data?.message || 'Server error occurred';
-          console.error('Backend error:', errorMessage);
-        } else if (error.request) {
-          errorMessage = 'No response from server';
-          console.error('Network error:', errorMessage);
-        } else {
-          errorMessage = error.message;
-          console.error('Unexpected error:', errorMessage);
+        const result = await getAllStaff({ search: debouncedSearch, page, limit });
+        if (isMounted) {
+          if (result.success) {
+            setStaff(result.staff);
+            setMeta(result.meta);
+          } else {
+            setError({ type: 'FETCH_FAILED', message: result.message });
+          }
         }
-
-        setError({ message: errorMessage });
+      } catch (err) {
+        if (isMounted) {
+          setError({ type: 'FETCH_FAILED', message: err.message });
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setIsStaffLoading(false);
+        }
       }
     };
-
     fetchStaffs();
-  }, []);
 
-  //Fetch Available Users
-
-  useEffect(() => {
-    const fetchAvailableUsers = async () => {
-      try {
-        const response = await fetch('http://localhost:3000/staff/available-users');
-        const data = await response.json();
-
-        if (data.success) {
-          setAvailableUsers(data.users);
-        }
-      } catch (error) {
-        let errorMessage = '';
-
-        if (error.response) {
-          errorMessage = error.response.data?.message || 'Server error occurred';
-          console.error('Backend error:', errorMessage);
-        } else if (error.request) {
-          errorMessage = 'No response from server';
-          console.error('Network error:', errorMessage);
-        } else {
-          errorMessage = error.message;
-          console.error('Unexpected error:', errorMessage);
-        }
-
-        setError({ message: errorMessage });
-      } finally {
-        setLoading(false);
-      }
+    return () => {
+      isMounted = false;
     };
+  }, [debouncedSearch, page, limit, refreshKey]);
 
-    fetchAvailableUsers();
-  }, []);
+  const handleToggleActive = async (e, staff) => {
+    e.stopPropagation();
 
-  // Fetch Staff by ID
+    if (!staff?.staff_id) return;
 
-  const fetchStaffById = async () => {
+    const nextActive = !staff.active;
+
+    setTogglingStaffId(staff.staff_id);
+    setError(null);
     try {
-      const result = await getStaffById(staffId);
+      const result = await toggleActiveStaff(staff.staff_id, nextActive);
 
       if (result.success) {
-        setSelectedStaff(result.staff);
-        setSuccessMessage('Staff retrieved successfully!');
+        setFlashStaffId(staff.staff_id);
+        setRefreshKey(k => k + 1);
       } else {
-        setError({ message: result.message || 'Staff not found' });
+        setError({
+          type: 'UPDATE_FAILED',
+          message: result.message || 'Failed to update staff status',
+        });
       }
     } catch (error) {
-      let errorMessage = '';
+      const msg =
+        error.response?.data?.message ||
+        (error.request ? 'No response from server' : error.message);
 
-      if (error.response) {
-        errorMessage =
-          error.response.data?.message || error.response.data?.error || 'Server error occurred';
-        console.error('Backend error:', errorMessage);
-      } else if (error.request) {
-        errorMessage = 'No response from server';
-        console.error('Network error:', errorMessage);
-      } else {
-        errorMessage = error.message;
-        console.error('Unexpected error:', errorMessage);
-      }
-
-      setError({ message: errorMessage });
+      setError({ type: 'NETWORK_ERROR', message: msg });
     } finally {
-      setLoading(false);
+      setTogglingStaffId(null);
     }
   };
 
-  // Update Staff Details
-
-  const [editStaff, setEditStaff] = useState({
-    staff_id: '',
-    first_name: '',
-    middle_initial: '',
-    last_name: '',
-    contact_number: '',
-    position_id: '',
-  });
-
-  const [isEditing, setIsEditing] = useState(false);
-
-  const updateStaffById = async () => {
-    setLoading(true);
-    setSuccessMessage('');
-    setError(null);
-    console.log('Updating Doctor with ID', editStaff.staff_id);
+  const fetchStaffById = async staff_id => {
+    setIsDetailsLoading(true);
     try {
-      console.log('editStaff before updated:', editStaff);
-      console.log('Selected staff before editing:', selectedStaff);
-      console.log('Updating staff with ID:', editStaff.staff_id);
-      const result = await updateStaff(editStaff.staff_id, {
-        first_name: editStaff.first_name,
-        middle_initial: editStaff.middle_initial,
-        last_name: editStaff.last_name,
-        contact_number: editStaff.contact_number,
-        position_id: editStaff.position_id,
-      });
-    } catch (error) {
-      let errorMessage = '';
-
-      if (error.response) {
-        errorMessage = error.response.data?.message || 'Server error occurred';
-        console.error('Backend error:', errorMessage);
-      } else if (error.request) {
-        errorMessage = 'No response from server';
-        console.error('Network error:', errorMessage);
-      } else {
-        errorMessage = error.message;
-        console.error('Unexpected error:', errorMessage);
-      }
-      setError({ message: errorMessage });
+      const result = await getStaffById(staff_id);
+      setSelectedStaff(result.data);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to fetch staff:', err);
+      setError({ type: 'FETCH_FAILED', message: 'Failed to fetch staff.' });
+      setSelectedStaff(null);
     } finally {
-      setLoading(false);
+      setIsDetailsLoading(false);
     }
   };
 
-  // Handle Toggle Status
+  const handleStaffUpdated = async updatedStaff => {
+    setFlashStaffId(updatedStaff.staff_id);
+    setRefreshKey(k => k + 1);
 
-  const handleToggleActive = async () => {
-    setLoading(true);
-    setSuccessMessage('');
+    if (selectedStaffId === updatedStaff.staff_id) {
+      setSelectedStaff(updatedStaff);
+    }
+
+    await fetchStaffById(selectedStaffId);
+  };
+
+  const openCreateStaffModal = () => {
+    setIsCreateOpen(true);
+  };
+
+  const closeCreateStaffModal = () => {
+    setIsCreateOpen(false);
+  };
+
+  const handleClearSearch = e => {
+    setSearchTerm('');
+    setDebouncedSearch('');
+    setSelectedStaff(null);
+    setSelectedStaffId(null);
+    setPage(1);
+  };
+
+  const openEditStaffModal = () => {
+    if (!selectedStaff) return;
+    setIsEditOpen(true);
     setError(null);
-
-    const newStatus = !selectedStaff.active;
-    try {
-      const result = await toggleActiveStaff(selectedStaff.staff_id, !selectedStaff.active);
-
-      setSelectedStaff(prev => ({ ...prev, active: !prev.active }));
-
-      if (newStatus) {
-        setSuccessMessage('Staff activated successfully');
-      } else {
-        setSuccessMessage('Staff deactivated successfully');
-      }
-      console.log('Staff active status toggeld successfully');
-    } catch (error) {
-      let errorMessage = '';
-
-      if (error.response) {
-        errorMessage = error.response.data?.message || 'Server error occurred';
-        console.error('Backend error:', errorMessage);
-      } else if (error.request) {
-        errorMessage = 'No response from server';
-        console.error('Network error:', errorMessage);
-      } else {
-        errorMessage = error.message;
-        console.error('Unexpected error:', errorMessage);
-      }
-      setError({ message: errorMessage });
-    } finally {
-      setLoading(false);
-    }
+    setPage(1);
   };
 
-  //Fetch Available Positions
-
-  useEffect(() => {
-    const fetchAvailablePositions = async () => {
-      try {
-        const response = await fetch('http://localhost:3000/positions/available');
-        const data = await response.json();
-        if (data.success) {
-          setAvailablePosition(data.position);
-        }
-      } catch (error) {
-        let errorMessage = '';
-
-        if (error.response) {
-          errorMessage = error.response.data?.message || 'Server error occurred';
-          console.error('Backend error:', errorMessage);
-        } else if (error.request) {
-          errorMessage = 'No response from server';
-          console.error('Network error:', errorMessage);
-        } else {
-          errorMessage = error.message;
-          console.error('Unexpected error:', errorMessage);
-        }
-
-        setError({ message: errorMessage });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAvailablePositions();
-  }, []);
-
-  // create Staff Handle
-
-  const resetForm = () => {
-    setAddStaff({
-      user_id: '',
-      first_name: '',
-      middle_initial: '',
-      last_name: '',
-      employee_number: '',
-      contact_number: '',
-      position_id: '',
-    });
-  };
-
-  const handleAddStaff = async e => {
-    e.preventDefault();
-    setLoading(true);
-    setSuccessMessage('');
+  const closeEditStaffModal = () => {
+    setIsEditOpen(false);
     setError(null);
-
-    try {
-      const payload = {
-        ...addStaff,
-        user_id: selectedUserId,
-        position_id: selectedPosition,
-      };
-
-      console.log('Final payload being sent:', payload);
-
-      const result = await createStaff(payload);
-      console.log('Finished API call, proceeding...');
-      resetForm();
-
-      setSuccessMessage('Staff added successfully!');
-      console.log('Staff create:', result);
-    } catch (error) {
-      let errorMessage = '';
-
-      if (error.response) {
-        errorMessage = error.response.data?.message || 'Server error occurred';
-        console.error('Backend error:', errorMessage);
-      } else if (error.request) {
-        errorMessage = 'No response from server';
-        console.error('Network error:', errorMessage);
-      } else {
-        errorMessage = error.message;
-        console.error('Unexpected error:', errorMessage);
-      }
-
-      setError({ message: errorMessage });
-    } finally {
-      setLoading(false);
-    }
   };
 
-  if (loading) return <p>Loading Staff...</p>;
-  if (error) return <p>Error: {error.message}</p>;
+  const closeDetailsPanel = () => {
+    setSelectedStaff(null);
+    setSelectedStaffId(null);
+  };
 
   return (
-    <div>
-      {/* ================= Staff List ================= */}
-      <h2>Staff's Lists</h2>
-      <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+    <div className="staff-page__table data-card">
+      <label htmlFor="staff-search">Search Staff</label>
+      <input
+        id="staff-search"
+        type="text"
+        placeholder="Search staff name..."
+        value={searchTerm}
+        onChange={handleSearchChange}
+      />
+      <button onClick={handleClearSearch} disabled={!searchTerm}>
+        Clear
+      </button>
+      <button onClick={openCreateStaffModal}>Add Staff</button>
+      <table className="table-ui staff-table">
         <thead>
           <tr>
-            <th style={{ border: '1px solid #ccc', padding: '8px' }}>ID</th>
-            <th style={{ border: '1px solid #ccc', padding: '8px' }}>First Name</th>
+            <th className="table-ui__th">Staff Name</th>
+            <th className="table-ui__th">Contact Number</th>
+            <th className="table-ui__th">Status</th>
           </tr>
         </thead>
         <tbody>
-          {staff.map((staff, index) => (
-            <tr key={staff.staff_id}>
-              <td style={{ border: '1px solid #ccc', padding: '8px' }}>{staff.staff_id}</td>
-              <td style={{ border: '1px solid #ccc', padding: '8px' }}>{staff.first_name}</td>
+          {isStaffLoading ? (
+            <tr>
+              <td className="table-ui__td" colSpan={3}>
+                Loading..
+              </td>
             </tr>
-          ))}
+          ) : error ? (
+            <tr>
+              <td className="table-ui__td" colSpan={3}>
+                {error.message ?? error}
+              </td>
+            </tr>
+          ) : meta && meta.total === 0 ? (
+            <tr>
+              <td className="table-ui__td" colSpan={3}>
+                No result yet
+              </td>
+            </tr>
+          ) : (
+            staff.map(s => (
+              <tr
+                className={`table-ui__row ${
+                  flashStaffId === s.staff_id ? 'table-ui__row--flash' : ''
+                }`}
+                key={s.staff_id}
+              >
+                <td className="table-ui__td">
+                  <span
+                    className="staff-table__name-link"
+                    onClick={() => {
+                      if (selectedStaffId === s.staff_id) {
+                        setSelectedStaff(null);
+                        setSelectedStaffId(null);
+                      } else {
+                        setSelectedStaffId(s.staff_id);
+                        fetchStaffById(s.staff_id);
+                      }
+                    }}
+                  >
+                    {s.first_name} {s.last_name}
+                  </span>
+                </td>
+                <td className="table-ui__td">{s.contact_number}</td>
+                <td className="table-ui__td staff-table__status-cell">
+                  <span
+                    className={`status-badge ${
+                      s.active ? 'status-badge--active' : 'status-badge--inactive'
+                    }`}
+                  >
+                    {s.active ? 'Active' : 'Inactive'}
+                  </span>
+
+                  <button
+                    type="button"
+                    className="switch-btn"
+                    aria-pressed={!!s.active}
+                    disabled={isStaffLoading || togglingStaffId === s.staff_id}
+                    onClick={e => handleToggleActive(e, s)}
+                    title={s.active ? 'Deactivate staff' : 'Activate staff'}
+                  >
+                    <span className="switch-track" />
+                    <span className="switch-thumb" />
+                  </button>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
+      {/* RIGHT: DETAILS PANEL */}
+      <div className="details-panel">
+        {isDetailsLoading ? (
+          <p>Loading Staff details...</p>
+        ) : selectedStaff ? (
+          <>
+            <h3>Staff Details</h3>
+            <p>Employee Number: {selectedStaff.employee_number}</p>
+            <p>Fist Name: {selectedStaff.first_name}</p>
+            <p>Middle Initial: {selectedStaff.middle_initial}</p>
+            <p>Last Name: {selectedStaff.last_name}</p>
+            <p>Contact Number: {selectedStaff.contact_number}</p>
+            <p>Position: {selectedStaff.position?.position_name ?? '-'}</p>
+            <p>Status: {selectedStaff.active ? 'Active' : 'Inactive'}</p>
 
-      {/* ================= Create Staff Form ================= */}
-      <div style={{ marginTop: '2rem' }}>
-        <h2>Create Staff</h2>
-        <form onSubmit={handleAddStaff}>
-          <p>User ID</p>
-          <select value={selectedUserId} onChange={e => setSelectedUserId(e.target.value)}>
-            <option value="">--Select a User--</option>
-            {availableUsers.map(user => (
-              <option key={user.id} value={user.id}>
-                {user.username} ({user.email})
-              </option>
-            ))}
-          </select>
-          <p>First Name</p>
-          <input
-            type="text"
-            placeholder="Enter first name"
-            value={addStaff.first_name}
-            onChange={e => setAddStaff({ ...addStaff, first_name: e.target.value })}
-          />
-          <p>Middle Initial</p>
-          <input
-            type="text"
-            placeholder="Enter Middle Initial"
-            value={addStaff.middle_initial}
-            onChange={e => setAddStaff({ ...addStaff, middle_initial: e.target.value })}
-          />
-          <p>Last Name</p>
-          <input
-            type="text"
-            placeholder="Enter Last name"
-            value={addStaff.last_name}
-            onChange={e => setAddStaff({ ...addStaff, last_name: e.target.value })}
-          />
-          <p>Contact Number</p>
-          <input
-            type="text"
-            placeholder="e.g., 09123456789"
-            value={addStaff.contact_number}
-            onChange={e => {
-              const raw = e.target.value.trim();
-
-              if (raw.startsWith('09')) {
-                const converted = '+639' + raw.slice(2);
-                setAddStaff({ ...addStaff, contact_number: converted });
-                return;
-              }
-
-              if (raw.startsWith('+639')) {
-                setAddStaff({ ...addStaff, contact_number: raw });
-                return;
-              }
-
-              const valid = /^\+?[0-9]*$/.test(raw);
-              if (!valid) return;
-
-              setAddStaff({ ...addStaff, contact_number: raw });
-            }}
-          />
-          <p>Position</p>
-          <select value={selectedPosition} onChange={e => setSelectedPosition(e.target.value)}>
-            <option value="">--Select a Position--</option>
-            {availablePosition.map(position => (
-              <option key={position.position_id} value={position.position_id}>
-                {position.position_name}
-              </option>
-            ))}
-          </select>
-
-          <button type="submit">Submit</button>
-
-          {successMessage && <p>{successMessage}</p>}
-        </form>
-      </div>
-
-      {/* ================= Search Staff By ID ================= */}
-      <div style={{ marginTop: '2rem' }}>
-        <h3>Search by Staff ID</h3>
-
-        <input
-          placeholder="Enter Staff ID"
-          value={staffId}
-          onChange={e => setStaffId(e.target.value)}
-        />
-
-        <button onClick={fetchStaffById}>Search</button>
-
-        {selectedStaff && (
-          <div>
-            <p>staff_id: {selectedStaff.staff_id}</p>
-            <p>first_name: {selectedStaff.first_name}</p>
-            <p>middle_initial: {selectedStaff.middle_initial}</p>
-            <p>last_name: {selectedStaff.last_name}</p>
-            <p>employee_number: {selectedStaff.employee_number}</p>
-            <p>contact_number: {selectedStaff.contact_number}</p>
-            <p>position: {selectedStaff.position?.position_name}</p>
-            <p>active: {selectedStaff.active ? 'Active' : 'Inactive'}</p>
-
-            {/* ================= Update Doctor By ID ================= */}
-
-            <button
-              onClick={() => {
-                setEditStaff(selectedStaff);
-                setIsEditing(true);
-              }}
-            >
+            <button className="btn btn--primary" onClick={openEditStaffModal}>
               Edit
             </button>
-            {isEditing && (
-              <div style={{ marginTop: '1rem' }}>
-                <h4>Edit Staff</h4>
-                <p>First Name</p>
-                <input
-                  text="text"
-                  placeholder="Enter First Name"
-                  value={editStaff.first_name}
-                  onChange={e => setEditStaff({ ...editStaff, first_name: e.target.value })}
-                />
-                <p>Middle Initial</p>
-                <input
-                  text="text"
-                  placeholder="Enter Middle Initial"
-                  value={editStaff.middle_initial || ''}
-                  onChange={e => setEditStaff({ ...editStaff, middle_initial: e.target.value })}
-                />
-                <p>Last Name</p>
-                <input
-                  text="text"
-                  placeholder="Enter Last Name"
-                  value={editStaff.last_name}
-                  onChange={e => setEditStaff({ ...editStaff, last_name: e.target.value })}
-                />
-                <p>Contact Number</p>
-                <input
-                  text="text"
-                  placeholder="Enter Contact Number"
-                  value={editStaff.contact_number || ''}
-                  onChange={e => setEditStaff({ ...editStaff, contact_number: e.target.value })}
-                />
-                <p>Position</p>
-                <select
-                  value={editStaff.position_id || ''}
-                  onChange={e => setEditStaff({ ...editStaff, position_id: e.target.value })}
-                >
-                  <option value="">Select a Position</option>
-                  {availablePosition.map(position => (
-                    <option key={position.position_id} value={position.position_id}>
-                      {position.position_name}
-                    </option>
-                  ))}
-                </select>
-                <button onClick={updateStaffById}>Update</button>
-
-                <button onClick={handleToggleActive}>Toggle Active</button>
-                {successMessage && <p>{successMessage}</p>}
-              </div>
-            )}
-          </div>
+            <button className="btn btn--secondary" onClick={closeDetailsPanel}>
+              Close
+            </button>
+          </>
+        ) : (
+          <p>Select a staff to view details</p>
         )}
       </div>
+      {/* Pagination controls */}
+      {meta && meta.total > 0 && (
+        <div className="staff-page__pagination">
+          <button
+            disabled={isStaffLoading || error || !meta?.hasPrevPage}
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+          >
+            Prev
+          </button>
+          <button
+            disabled={isStaffLoading || error || !meta?.hasNextPage}
+            onClick={() => setPage(p => p + 1)}
+          >
+            Next
+          </button>
+          <p>
+            Page {meta?.page ?? 1} of {meta?.totalPages ?? 0}
+          </p>
+        </div>
+      )}
+      {isCreateOpen && (
+        <CreateStaffModal
+          isOpen={isCreateOpen}
+          onClose={closeCreateStaffModal}
+          onCreated={newStaff => {
+            const id = newStaff?.staff_id;
+            if (id) {
+              setFlashStaffId(id);
+            }
+            setPage(1);
+            setRefreshKey(k => k + 1);
+          }}
+        />
+      )}
+      <EditStaffModal
+        isOpen={isEditOpen}
+        onClose={closeEditStaffModal}
+        staff={selectedStaff}
+        onUpdated={handleStaffUpdated}
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ const { formatToPh } = require('../../utils/datetime');
 const { format } = require('sequelize/lib/utils');
 
 async function createUrinalysisService(result_id, data) {
+  data = data || {};
   if (!result_id || !isValidUUID(result_id)) {
     return { success: false, message: 'Invalid or missing result_id' };
   }
@@ -20,7 +21,7 @@ async function createUrinalysisService(result_id, data) {
     'glucose',
     'protein',
     'specific_gravity',
-    'ph_level',
+    'ph',
     'blood',
     'vitamin_c',
     'microalbumin',
@@ -73,16 +74,16 @@ async function createUrinalysisService(result_id, data) {
       resultField[field] = parseFloat(strValue);
       continue;
     }
-
-    resultField.result_id = result_id;
-
-    const urinalysis = await Urinalysis.create(resultField);
-
-    return {
-      success: true,
-      data: urinalysis,
-    };
   }
+
+  resultField.result_id = result_id;
+
+  const urinalysis = await Urinalysis.create(resultField);
+
+  return {
+    success: true,
+    data: urinalysis,
+  };
 }
 
 async function getAllUrinalysisResultService(is_deleted) {

@@ -11,6 +11,10 @@ import Billing from './pages/Billing';
 import BillingService from './pages/Billing_service';
 import BillingItem from './pages/Billing_item';
 import Results from './pages/Results';
+import PatientOverview from './pages/PatientOverview';
+import PatientResultHistory from './pages/PatientResultHistory';
+import PatientBillingHistory from './pages/PatientBillingHistory';
+import ClinicalWorklist from './pages/ClinicalWorklist';
 
 function App() {
   return (
@@ -40,6 +44,10 @@ function App() {
           <Route path="billing_service" element={<BillingService />} />
           <Route path="billing/:billing_id/items" element={<BillingItem />} />
           <Route path="results" element={<Results />} />
+          <Route path="patients/:patientId" element={<PatientOverview />} />
+          <Route path="patients/:patientId/results" element={<PatientResultHistory />} />
+          <Route path="patients/:patientId/billing" element={<PatientBillingHistory />} />
+          <Route path="ClinicalWorklist" element={<ClinicalWorklist />} />
         </Route>
       </Routes>
     </Router>

@@ -1,4 +1,6 @@
 const { isValidUUID } = require('../../utils/security');
+const { Op } = require('sequelize');
+
 const {
   Patient,
   createPatient,
@@ -112,7 +114,7 @@ async function registerPatientService(
     parsedDate = new Date(update.birthdate);
 
     if (!isValidFormat || isNaN(parsedDate.getTime())) {
-      return { success: false, error: 'Invalid input.' };
+      return { success: false, message: 'Invalid input.' };
     }
   }
 
@@ -136,7 +138,7 @@ async function registerPatientService(
       update.medical_history = update.medical_history.trim();
     }
     if (update.medical_history && update.medical_history.length > 1000) {
-      return { success: false, error: 'Medical history must not exceed 1000 characters.' };
+      return { success: false, message: 'Medical history must not exceed 1000 characters.' };
     }
   }
 
@@ -162,7 +164,7 @@ async function registerPatientService(
     const isValidBuildingNumber = /^[A-Za-z0-9\s\-\/]+$/.test(update.building_number);
 
     if (!isValidBuildingNumber) {
-      return { success: false, error: 'Building number must be alphanumeric only.' };
+      return { success: false, message: 'Building number must be alphanumeric only.' };
     }
   }
 
@@ -172,7 +174,7 @@ async function registerPatientService(
 
   if (update.barangay_subdivision) {
     if (update.barangay_subdivision.length > 100) {
-      return { success: false, error: 'Subdivision must not exceed 100 characters.' };
+      return { success: false, message: 'Subdivision must not exceed 100 characters.' };
     }
   }
 
@@ -180,7 +182,7 @@ async function registerPatientService(
   if (!isValidCityMunicipality) {
     return {
       success: false,
-      error:
+      message:
         'City municipality must contain only letters and spaces. No numbers or symbols allowed.',
     };
   }
@@ -188,14 +190,14 @@ async function registerPatientService(
   if (update.province) {
     const isValidProvince = /^[A-Za-z0-9 ]+$/.test(update.province);
     if (!isValidProvince) {
-      return { error: 'Only letters, numbers, and spaces are allowed. No symbols.' };
+      return { message: 'Only letters, numbers, and spaces are allowed. No symbols.' };
     }
   }
 
   if (update.postal_code) {
     const isValidPostalCode = /^[0-9]{4}$/.test(update.postal_code);
     if (!isValidPostalCode) {
-      return { error: 'Postal code must be a 4-digit number.' };
+      return { message: 'Postal code must be a 4-digit number.' };
     }
   }
 
@@ -204,7 +206,8 @@ async function registerPatientService(
     if (!isValidCountry) {
       return {
         success: false,
-        error: 'Country name must contain only letters and spaces. No numbers or symbols allowed.',
+        message:
+          'Country name must contain only letters and spaces. No numbers or symbols allowed.',
       };
     }
   }
@@ -216,7 +219,7 @@ async function registerPatientService(
     else return { success: false, message: 'Active must be true or false.' };
   }
 
-  const userLinked = await Patient.findOne({ where: { user_id } });
+  const userLinked = await Patient.findOne({ where: { user_id: update.user_id } });
   if (userLinked) return { success: false, message: 'This user is already linked to a patient.' };
 
   const existingPatient = await Patient.findOne({
@@ -248,17 +251,51 @@ async function registerPatientService(
   return {
     success: true,
     message: 'Patient created successfully.',
-    patient,
+    data,
   };
 }
 
-async function getAllPatientsService(active) {
+async function getAllPatientsService({
+  page = 1,
+  limit = 10,
+  search = '',
+  active,
+  sort_by = 'created_at',
+  sortOrder = 'desc',
+} = {}) {
+  const cleanSearch = search ? search.trim().replace(/\s+/g, ' ') : '';
+  const tokens = cleanSearch ? cleanSearch.split(' ') : [];
+
+  const safeLimit = Math.min(Number(limit) || 10, 20);
+  const safePage = Math.max(Number(page) || 1, 1);
+  const offset = (safePage - 1) * safeLimit;
+
+  const VALID_SORT_ORDERS = ['ASC', 'DESC'];
+  const order = String(sortOrder || 'DESC').toUpperCase();
+  const safeOrder = VALID_SORT_ORDERS.includes(order) ? order : 'DESC';
+
   const whereClause = {};
 
-  if (active !== undefined) whereClause.active = active;
+  if (tokens.length > 0) {
+    whereClause[Op.and] = tokens.map(token => ({
+      [Op.or]: [
+        { first_name: { [Op.iLike]: `%${token}%` } },
+        { last_name: { [Op.iLike]: `%${token}%` } },
+      ],
+    }));
+  }
 
-  const result = await Patient.findAll({
+  if (active !== undefined) {
+    const activeStr = String(active).toLowerCase();
+    if (activeStr === 'true') whereClause.active = true;
+    else if (activeStr === 'false') whereClause.active = false;
+  }
+
+  const { rows, count } = await Patient.findAndCountAll({
     where: whereClause,
+    limit: safeLimit,
+    order: [['created_at', 'DESC']],
+    offset,
     attributes: [
       'patient_id',
       'first_name',
@@ -286,10 +323,23 @@ async function getAllPatientsService(active) {
     ],
   });
 
+  const total = count;
+  const totalPages = Math.max(1, Math.ceil(total / safeLimit));
+
+  const hasPrevPage = safePage > 1 && totalPages > 0;
+  const hasNextPage = safePage < totalPages;
+
   return {
     success: true,
-    count: result.length,
-    patient: result.map(patients => patients.get({ plain: true })),
+    meta: {
+      total,
+      page: safePage,
+      limit: safeLimit,
+      totalPages,
+      hasPrevPage,
+      hasNextPage,
+    },
+    data: rows.map(p => p.get({ plain: true })),
   };
 }
 
@@ -312,7 +362,7 @@ async function getPatientByIdService(patient_id) {
 
   return {
     success: true,
-    patient: patient.get({ plain: true }),
+    data: patient.get({ plain: true }),
   };
 }
 
@@ -356,8 +406,11 @@ async function updatePatientService(patient_id, updateField) {
       trimmed = value.trim();
     } else if (typeof value === 'number') {
       if (isNaN(value) || value < 0) continue;
+      trimmed = value;
     } else if (typeof value === 'boolean') {
       trimmed = value;
+    } else if (Array.isArray(value)) {
+      trimmed = value; // ✅ allow JSONB arrays like conditions
     } else {
       continue;
     }
@@ -368,7 +421,7 @@ async function updatePatientService(patient_id, updateField) {
   if (update.first_name && (update.first_name.length < 2 || update.first_name.length > 50)) {
     return {
       success: false,
-      error: 'First name must be between 2 and 50 characters.',
+      message: 'First name must be between 2 and 50 characters.',
     };
   }
 
@@ -503,7 +556,7 @@ async function updatePatientService(patient_id, updateField) {
   return {
     success: true,
     message: 'Patient updated successfully',
-    updatePatient: refreshPatient.get({ plain: true }),
+    data: refreshPatient.get({ plain: true }),
   };
 }
 
@@ -521,7 +574,7 @@ async function togglePatientStatusService(patient_id, active) {
     };
   }
 
-  patient.active = !patient.active;
+  patient.active = active;
   await patient.save();
 
   return {
@@ -529,7 +582,7 @@ async function togglePatientStatusService(patient_id, active) {
     message: patient.active
       ? 'Patient activated successfully.'
       : 'Patient deactivated successfully.',
-    patient: patient.get({ plain: true }),
+    data: patient.get({ plain: true }),
   };
 }
 

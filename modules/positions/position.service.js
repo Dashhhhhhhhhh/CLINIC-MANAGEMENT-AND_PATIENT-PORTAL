@@ -59,7 +59,7 @@ async function getAllPositionsService(active) {
   return {
     success: true,
     count: result.length,
-    position: result.map(pos => pos.get({ plain: true })),
+    data: result.map(pos => pos.get({ plain: true })),
   };
 }
 
@@ -68,13 +68,13 @@ async function getPositionByIdService(position_id) {
     return { success: false, message: 'Invalid position id.' };
   }
 
-  const position = await Position.findByPk();
+  const position = await Position.findByPk(position_id);
 
-  if (!position) return { success: true, message: 'Position not found' };
+  if (!position) return { success: false, message: 'Position not found' };
 
   return {
     success: true,
-    staff: staff.get({ plain: true }),
+    data: existingPosition.map(p => p.get({ plain: true })),
   };
 }
 
@@ -87,9 +87,9 @@ async function updatePositionService(position_id, updateField) {
 
   const update = {};
 
-  const allowedField = ['position_name'];
+  const allowedFields = ['position_name'];
 
-  for (const field of allowFields) {
+  for (const field of allowedFields) {
     let value = updateField[field];
     if (value === null || value === undefined) continue;
 
@@ -113,8 +113,8 @@ async function updatePositionService(position_id, updateField) {
     (update.position_name.length < 2 || update.position_name.length > 50)
   ) {
     return {
-      sucess: false,
-      errror: 'Position name must be between 2 and 50 characters.',
+      success: false,
+      error: 'Position name must be between 2 and 50 characters.',
     };
   }
 
@@ -125,12 +125,12 @@ async function updatePositionService(position_id, updateField) {
     where: { position_id: position_id },
   });
 
-  const refreshPosition = await Position.findOne({ position: { position_id: position_id } });
+  const refreshPosition = await Position.findOne({ where: { position_id: position_id } });
 
   return {
     success: true,
     message: 'Position updated successfully.',
-    updatePosition: refreshPosition.get({ plain: true }),
+    data: refreshPosition.get({ plain: true }),
   };
 }
 
@@ -148,21 +148,26 @@ async function togglePositionStatusService(position_id, active) {
     };
   }
 
+  position.active = active;
+  await position.save();
+
   return {
     success: true,
     message: position.active
       ? 'Position activated successfully.'
       : 'Position deactivated successfully',
-    position: position.get({ plain: true }),
+    data: position.get({ plain: true }),
   };
 }
 
 async function getAvailablePositionService() {
-  const existingPosition = await Position.findAll();
+  const existingPosition = await Position.findAll({
+    where: { active: true },
+  });
 
   return {
     success: true,
-    position: existingPosition,
+    data: existingPosition,
   };
 }
 

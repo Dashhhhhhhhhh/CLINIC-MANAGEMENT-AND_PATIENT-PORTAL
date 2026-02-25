@@ -48,8 +48,7 @@ async function createXrayService(result_id, data) {
   const xray = await Xray.create(resultField);
 
   return {
-    success: true,
-    data: xray,
+    xray,
   };
 }
 

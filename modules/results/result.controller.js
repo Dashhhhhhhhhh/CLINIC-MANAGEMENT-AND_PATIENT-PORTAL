@@ -4,6 +4,10 @@ const {
   getResultByIdService,
   updateResultService,
   toggleResultDeleteService,
+  findLatestResultsService,
+  getPatientResultService,
+  getWorklistResultService,
+  getResultsListService,
 } = require('./result.service');
 const { formatToPh } = require('../../utils/datetime');
 const { format } = require('sequelize/lib/utils');
@@ -26,7 +30,7 @@ async function createResultController(req, res) {
       patient_id,
       created_by,
       test_type_id,
-      billing_item_id,
+      billing_item_id || null,
       result_data,
       status
     );
@@ -150,6 +154,71 @@ async function toggleResultDeleteController(req, res) {
   }
 }
 
+async function findLatestResultsController(req, res) {
+  try {
+    const { is_deleted } = req.query;
+    const { patient_id } = req.params;
+
+    console.log(req.params.patient_id);
+
+    if (!patient_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'patient_id is required',
+      });
+    }
+
+    const result = await findLatestResultsService(patient_id, is_deleted);
+
+    result.data = result.data.map(data => ({
+      ...data,
+      created_at: formatToPh(data.created_at),
+      updated_at: formatToPh(data.updated_at),
+    }));
+
+    return res.status(200).json({
+      ...result,
+      data: result.data,
+    });
+  } catch (error) {
+    console.error('Error fetching patient results::', error);
+    if (error.errors) console.error(error.errors);
+    if (error.parent) console.error(error.parent);
+
+    return res.status(500).json({
+      success: false,
+      error: 'Error fetching patient results:',
+    });
+  }
+}
+
+async function getPatientResultController(req, res) {
+  try {
+    const { patientId } = req.params;
+    const { from, to, page, limit } = req.query;
+
+    const result = await getPatientResultService({
+      patient_id: patientId,
+      from,
+      to,
+      page,
+      limit,
+    });
+
+    if (!result.success) return res.status(400).json(result);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Error fetching patient results:', error);
+    if (error.errors) console.error(error.errors);
+    if (error.parent) console.error(error.parent);
+
+    return res.status(500).json({
+      success: false,
+      error: 'Error fetching patient results:',
+    });
+  }
+}
+
 const uploadResultReport = async (req, res) => {
   try {
     const { result_id } = req.params;
@@ -196,11 +265,61 @@ const uploadResultReport = async (req, res) => {
   }
 };
 
+async function getWorklistResultController(req, res) {
+  try {
+    const { status, test_type_id, page, limit } = req.query;
+
+    const result = await getWorklistResultService({
+      status,
+      test_type_id,
+      page,
+      limit,
+    });
+
+    if (!result.success) return res.status(400).json(result);
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error('Error fetching worklist results:', err);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+}
+
+async function getResultsListController(req, res) {
+  try {
+    const { page, limit, search, is_deleted, sortBy, sortOrder, test_type_id } = req.query;
+
+    const testTypeNorm =
+      typeof test_type_id === 'string' && test_type_id.trim() === '' ? undefined : test_type_id;
+
+    const searchNorm = typeof search === 'string' ? search.trim() : '';
+
+    const result = await getResultsListService({
+      page,
+      limit,
+      search: searchNorm,
+      is_deleted,
+      test_type_id: testTypeNorm,
+      sortBy,
+      sortOrder,
+    });
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error('Error fetching results list:', err);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+}
+
 module.exports = {
   createResultController,
   getAllResultController,
   getResultByIdController,
   updateResultController,
   toggleResultDeleteController,
+  findLatestResultsController,
+  getPatientResultController,
   uploadResultReport,
+  getWorklistResultController,
+  getResultsListController,
 };

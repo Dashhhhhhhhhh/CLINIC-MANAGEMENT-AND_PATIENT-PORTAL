@@ -1,0 +1,57 @@
+.sidebar {
+  width: 220px;
+  min-height: 100vh;
+  padding: 16px 12px;
+  background-color: #f7f7f7;
+  border-right: 1px solid #e0e0e0;
+}
+
+.sidebar-title {
+  margin-bottom: 20px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #222;
+}
+
+.sidebar-section {
+  margin-top: 24px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #666;
+}
+
+.sidebar-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-list li {
+  margin-bottom: 4px;
+}
+
+.sidebar-list a {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 14px;
+  color: #333;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.sidebar-list a:hover {
+  background-color: #eaeaea;
+}
+
+/* NavLink active state */
+.sidebar-list a.active {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+  font-weight: 500;
+}

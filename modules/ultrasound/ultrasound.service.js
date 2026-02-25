@@ -47,8 +47,7 @@ async function createUltrasoundService(result_id, data) {
   const ultrasound = await Ultrasound.create(resultField);
 
   return {
-    success: true,
-    data: ultrasound,
+    ultrasound,
   };
 }
 

@@ -53,11 +53,32 @@ async function registerStaffController(req, res) {
 
 async function getAllStaffController(req, res) {
   try {
-    const result = await getAllStaffService();
+    const { page, limit, search, active, position_id, sortBy, sortOrder } = req.query;
+
+    let parsedActive;
+    const activeNorm = typeof active === 'string' ? active.toLowerCase() : active;
+
+    if (activeNorm === 'true' || activeNorm === '1') parsedActive = true;
+    else if (activeNorm === 'false' || activeNorm === '0') parsedActive = false;
+    else parsedActive = undefined;
+
+    const positionIdNorm =
+      typeof position_id === 'string' && position_id.trim() === '' ? undefined : position_id;
+    const searchNorm = typeof search === 'string' ? search.trim() : '';
+
+    const result = await getAllStaffService({
+      page,
+      limit,
+      search: searchNorm,
+      active: parsedActive,
+      position_id: positionIdNorm,
+      sortBy,
+      sortOrder,
+    });
 
     return res.status(200).json(result);
   } catch (err) {
-    console.error('Error in getAllDcotorsController:', err);
+    console.error('Error in getAllStaffController:', err);
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 }

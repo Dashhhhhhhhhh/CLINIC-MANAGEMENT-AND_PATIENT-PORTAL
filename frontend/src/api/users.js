@@ -11,10 +11,9 @@ export async function createUser(payload) {
   }
 }
 
-export async function getAllUsers() {
+export async function getAllUsers(params = {}) {
   try {
-    const response = await api.get('/users');
-    console.log('Fetched users:', response.data);
+    const response = await api.get('/users', { params });
     return response.data;
   } catch (error) {
     console.error('Error fetching users:', error);

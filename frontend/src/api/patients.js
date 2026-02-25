@@ -23,9 +23,9 @@ export async function createPatient(payload) {
   }
 }
 
-export async function getAllPatient() {
+export async function getAllPatient(params = {}) {
   try {
-    const response = await api.get('/patients');
+    const response = await api.get('/patients', { params });
     console.log('Fetched patient:', response.data);
     return response.data;
   } catch (error) {
@@ -85,9 +85,9 @@ export async function updatePatient(patient_id, updatedData) {
   }
 }
 
-export async function toggleActivePatient(patient_id, newStatus, active) {
+export async function toggleActivePatient(patient_id, newStatus) {
   try {
-    const response = await api.patch(`patients/${patient_id}/status`, { active, newStatus });
+    const response = await api.patch(`patients/${patient_id}/status`, { active: newStatus });
     return response.data;
   } catch (error) {
     console.error('Error toggling status of patients', error);

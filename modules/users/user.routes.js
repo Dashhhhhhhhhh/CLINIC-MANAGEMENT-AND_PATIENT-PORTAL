@@ -16,7 +16,7 @@ router.get('/available', getAvailableRoleController);
 router.get('/', getAllUsersController);
 router.get('/:id', getUsersIdController);
 
-router.patch('/:id', updateUsersController);
 router.patch('/:id/status', toggleUserStatusController);
+router.patch('/:id', updateUsersController);
 
 module.exports = router;

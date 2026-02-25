@@ -480,3 +480,14 @@ module.exports = {
   toggleDeletebillingItemService,
   getBillingItemsByBillingIdService,
 };
+
+// Step 3 — Update your “billable results” query
+
+// You already have many service methods.
+// When you build Billing module next, add something like:
+
+// getUnbilledCompletedResultsByPatient(patient_id)
+
+// That’s a professional API.
+
+// Billing module later: implement “Billable results = Completed + Unbilled” list.

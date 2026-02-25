@@ -1,0 +1,58 @@
+.patients-page {
+  padding: 16px;
+}
+
+.patients-page__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.patients-page__title {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.patients-page__controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.patients-page__search-input {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  width: 260px;
+  background: #242424;
+  color: var(--text);
+}
+
+.patients-page__clear-btn {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: #242424;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.patients-page__clear-btn:hover {
+  background: var(--hover);
+}
+
+/* Patients page (list) layout helpers */
+.patients-page__pagination {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.patients-page__pagination button {
+  padding: 0.5rem 1rem;
+}
+
+.patients-page__pagination p {
+  margin: 0;
+}

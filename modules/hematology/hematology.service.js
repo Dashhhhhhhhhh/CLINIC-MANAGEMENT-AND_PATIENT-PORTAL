@@ -4,6 +4,8 @@ const { Result } = require('../results/result.model');
 const { formatToPh } = require('../../utils/datetime');
 
 async function createHematologyService(result_id, data) {
+  data = data || {};
+
   if (!result_id || !isValidUUID(result_id)) {
     return { success: false, message: 'Invalid or missing result_id' };
   }
@@ -54,7 +56,7 @@ async function createHematologyService(result_id, data) {
     resultField[field] = numericValue;
   }
 
-  resultField.other = data.other ?? null;
+  resultField.others = data.others ?? null;
   resultField.result_id = result_id;
 
   const hematology = await Hematology.create(resultField);

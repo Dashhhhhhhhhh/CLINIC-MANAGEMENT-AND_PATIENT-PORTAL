@@ -1,0 +1,90 @@
+/* PatientResultHistory.css */
+
+/* Layout wrapper for the filter + list area */
+.patient-history-container {
+  padding: 10px 4px;
+}
+
+/* Day group (date header + timeline rail) */
+.patient-history-day-group {
+  position: relative;
+  padding-left: 22px; /* space for rail + dots */
+  margin-top: 14px;
+}
+
+.patient-history-day {
+  margin: 18px 0 6px;
+  font-weight: 600;
+}
+
+/* Vertical timeline rail */
+.patient-history-day-group::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 40px; /* starts below the day header */
+  bottom: 6px;
+  width: 2px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Rows */
+.patient-history-row {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 10px 14px 10px 16px; /* left padding includes dot space */
+  margin: 6px 0;
+
+  border-radius: 8px;
+  cursor: pointer;
+
+  background: rgba(255, 255, 255, 0.03);
+
+  transition:
+    background 0.2s ease,
+    transform 0.1s ease;
+}
+
+.patient-history-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-1px);
+}
+
+/* Dot per row */
+.patient-history-row::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.patient-history-row:hover::before {
+  background: rgba(255, 255, 255, 0.75);
+}
+
+/* Left side content: test badge + status pill */
+.patient-history-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Meta time on the right */
+.patient-history-meta {
+  font-size: 12px;
+  opacity: 0.65;
+  white-space: nowrap;
+}
+
+.patient-history-items {
+  margin-top: 6px;
+}

@@ -60,7 +60,7 @@ async function createSpecializationService(specialization_name, description, act
   return {
     success: true,
     message: 'Specialization created successfully.',
-    specialization: specialization,
+    data: specialization,
   };
 }
 
@@ -77,7 +77,7 @@ async function getAllSpecializationService(active) {
   return {
     success: true,
     count: result.length,
-    specialization: result.map(special => special.get({ plain: true })),
+    data: result.map(special => special.get({ plain: true })),
   };
 }
 
@@ -91,7 +91,7 @@ async function getSpecializationByIdService(specialization_id) {
 
   return {
     success: true,
-    specialization: specialization.get({ plain: true }),
+    data: specialization.get({ plain: true }),
   };
 }
 
@@ -117,7 +117,7 @@ async function updateSpecializationService(specialization_id, updateField) {
       trimmed = value.trim();
     } else if (typeof value === 'number') {
       if (isNaN(value) || value < 0) continue;
-      rimmed = value;
+      trimmed = value;
     } else if (typeof value === 'boolean') {
       trimmed = value;
     } else {
@@ -156,7 +156,7 @@ async function updateSpecializationService(specialization_id, updateField) {
   return {
     success: true,
     message: 'Specialization updated successfully.',
-    specialization: refreshSpecialization.get({ plain: true }),
+    data: refreshSpecialization.get({ plain: true }),
   };
 }
 
@@ -183,7 +183,7 @@ async function toggleSpecializationStatusService(specialization_id, active) {
   return {
     success: true,
     message: specialization.active ? 'Specialization activated.' : 'Specialization deactivated.',
-    specialization: specialization.get({ plain: true }),
+    data: specialization.get({ plain: true }),
   };
 }
 
@@ -192,7 +192,7 @@ async function getSpecializationService() {
 
   return {
     success: true,
-    specialization: existingSpecialization,
+    data: existingSpecialization,
   };
 }
 

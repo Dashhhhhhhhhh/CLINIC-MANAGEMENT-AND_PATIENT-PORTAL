@@ -11,9 +11,9 @@ export async function createStaff(payload) {
   }
 }
 
-export async function getAllStaff() {
+export async function getAllStaff(params = {}) {
   try {
-    const response = await api.get('/staff');
+    const response = await api.get('/staff', { params });
     console.log('Fetched staff:', response.data);
     return response.data;
   } catch (error) {
@@ -66,7 +66,7 @@ export async function getAvailableUsers() {
 
 export async function getAvailablePosition() {
   try {
-    const response = await api.get('positions/available');
+    const response = await api.get('/positions/available');
     return response.data;
   } catch (error) {
     console.error('Error fetching available users:', error);

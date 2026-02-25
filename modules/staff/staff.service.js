@@ -10,7 +10,7 @@ const {
 const { User } = require('../users/user.model');
 const { Position } = require('../positions/position.model');
 const e = require('cors');
-const { where } = require('sequelize');
+const { where, Op } = require('sequelize');
 const { Sequelize } = require('sequelize');
 const { getAvailableUsersByModel } = require('../../utils/helpers/getAvailableUsers');
 
@@ -122,13 +122,58 @@ async function registerStaffService(
   return { success: true, message: 'Staff registered successfully.', staff };
 }
 
-async function getAllStaffService(active, position_id) {
+async function getAllStaffService({
+  active,
+  search,
+  page,
+  limit,
+  position_id,
+  sortBy = 'created_at',
+  sortOrder = 'DESC',
+} = {}) {
+  const cleanSearch = search ? search.trim().replace(/\s+/g, ' ') : '';
+  const tokens = cleanSearch ? cleanSearch.split(' ') : [];
+
+  const safeLimit = Math.min(Number(limit) || 10, 20);
+  const safePage = Math.max(Number(page) || 1, 1);
+  const offset = (safePage - 1) * safeLimit;
+
+  const VALID_SORT_ORDERS = ['ASC', 'DESC'];
+  const order = String(sortOrder || 'DESC').toUpperCase();
+  const safeOrder = VALID_SORT_ORDERS.includes(order) ? order : 'DESC';
+
   const whereClause = {};
 
-  if (active !== undefined) whereClause.active = active;
+  if (tokens.length > 0) {
+    whereClause[Op.and] = tokens.map(token => ({
+      [Op.or]: [
+        { first_name: { [Op.iLike]: `%${token}%` } },
+        { last_name: { [Op.iLike]: `%${token}%` } },
+        { employee_number: { [Op.iLike]: `${token}%` } },
+        { contact_number: { [Op.iLike]: `${token}%` } },
+      ],
+    }));
+  }
 
-  const result = await Staff.findAll({
+  if (active !== undefined) {
+    const activeStr = String(active).toLowerCase();
+    if (activeStr === 'true') whereClause.active = true;
+    else if (activeStr === 'false') whereClause.active = false;
+  }
+
+  if (position_id !== undefined && position_id !== null && position_id !== '') {
+    whereClause.position_id = position_id;
+  }
+
+  const allowedSortFields = ['created_at', 'first_name', 'last_name', 'employee_number', 'active'];
+  const sortField = allowedSortFields.includes(sortBy) ? sortBy : 'created_at';
+
+  const { rows, count } = await Staff.findAndCountAll({
     where: whereClause,
+    limit: safeLimit,
+    order: [[sortField, safeOrder]],
+    offset,
+    distinct: true,
     attributes: [
       'staff_id',
       'first_name',
@@ -147,10 +192,23 @@ async function getAllStaffService(active, position_id) {
     ],
   });
 
+  const total = count;
+  const totalPages = Math.max(1, Math.ceil(total / safeLimit));
+
+  const hasPrevPage = safePage > 1 && totalPages > 0;
+  const hasNextPage = safePage < totalPages;
+
   return {
     success: true,
-    count: result.length,
-    staff: result.map(staffs => staffs.get({ plain: true })),
+    meta: {
+      total,
+      page: safePage,
+      limit: safeLimit,
+      totalPages,
+      hasPrevPage,
+      hasNextPage,
+    },
+    staff: rows.map(staffs => staffs.get({ plain: true })),
   };
 }
 
@@ -174,11 +232,11 @@ async function getStaffByIdService(staff_id) {
     ],
   });
 
-  if (!staff) return { success: true, message: 'Staff not found.' };
+  if (!staff) return { success: false, message: 'Staff not found.' };
 
   return {
     success: true,
-    staff: staff.get({ plain: true }),
+    data: staff.get({ plain: true }),
   };
 }
 

@@ -1,0 +1,47 @@
+.results-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.result-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.result-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+
+  padding: 16px;
+}
+.result-card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.result-card__actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.result-card__patient {
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+.result-card__meta {
+  margin-top: 6px;
+  font-size: 12px;
+  opacity: 0.75;
+  letter-spacing: 0.2px;
+}
+
+.view-history-button {
+  margin-top: 1rem;
+}

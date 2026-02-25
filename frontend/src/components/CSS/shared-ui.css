@@ -1,0 +1,332 @@
+:root {
+  --bg: #1f1f1f;
+  --panel: #2b2b2b;
+  --border: #3a3a3a;
+  --text: #f5f5f5;
+  --muted: #b3b3b3;
+  --hover: #333333;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ---------- Shared badges ---------- */
+.test-badge {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 0.95;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.test-hematology {
+  background: rgba(239, 68, 68, 0.18);
+}
+.test-urinalysis {
+  background: rgba(245, 158, 11, 0.18);
+}
+.test-ultrasound {
+  background: rgba(14, 165, 233, 0.18);
+}
+
+.status-pill {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  opacity: 0.95;
+  white-space: nowrap;
+}
+
+.status-reviewed {
+  background: rgba(59, 130, 246, 0.18);
+}
+.status-completed {
+  background: rgba(34, 197, 94, 0.18);
+}
+.status-approved {
+  background: rgba(168, 85, 247, 0.18);
+}
+
+/* ---------- Shared card ---------- */
+.data-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+/* ---------- Shared table base ---------- */
+.table-ui {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-ui__th {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.table-ui__td {
+  color: var(--text);
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.table-ui__row:hover {
+  background: var(--hover);
+}
+
+/* Optional: if you want row-hover to feel clickable everywhere */
+.table-ui__row {
+  cursor: pointer;
+}
+
+/* Flash highlight */
+.table-ui__row--flash {
+  animation: rowFlash 1200ms ease-out 1;
+}
+
+@keyframes rowFlash {
+  0% {
+    box-shadow: 0 0 0 9999px rgba(46, 204, 113, 0.18) inset;
+  }
+  100% {
+    box-shadow: 0 0 0 9999px rgba(46, 204, 113, 0) inset;
+  }
+}
+
+/* ---------- Shared status badge ---------- */
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge--active {
+  background: rgba(34, 197, 94, 0.18);
+  color: #b7f7c9;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.status-badge--inactive {
+  background: rgba(239, 68, 68, 0.18);
+  color: #ffc1c1;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+/* ---------- Shared buttons ---------- */
+.btn {
+  background: #242424;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.btn:hover {
+  background: var(--hover);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.btn--sm {
+  font-size: 13px;
+  padding: 7px 10px;
+}
+.btn--primary {
+  background: #3a3a3a;
+  border: 1px solid #4a4a4a;
+}
+.btn--primary:hover {
+  background: #444;
+}
+.btn--muted {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.btn--muted:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+}
+
+/* ---------- Shared form helpers ---------- */
+.form-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 14px;
+  margin-bottom: 10px;
+  color: var(--text);
+  font-size: 14px;
+}
+.form-radio input[type='radio'] {
+  width: auto;
+  margin: 0;
+}
+
+.form-select {
+  display: block;
+  margin-top: 8px;
+  margin-bottom: 10px;
+  color: var(--text);
+  font-size: 14px;
+}
+.form-select select {
+  margin-top: 6px;
+}
+
+/* ---------- Modal (shared) ---------- */
+/* Keep backdrop enabled unless you intentionally removed it */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.modal-card {
+  width: min(1100px, 95vw);
+  max-height: 85vh;
+  overflow: auto;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  letter-spacing: 0.02em;
+}
+
+.modal-card h2 {
+  margin: 0 0 12px 0;
+}
+
+.modal-card input,
+.modal-card select,
+.modal-card textarea {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #242424;
+  color: var(--text);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.error-text {
+  color: #ff6b6b;
+  margin-bottom: 8px;
+}
+
+.doctor-page__table {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 16px;
+  align-items: start;
+}
+
+.doctor-table__name-link {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.doctor-table__name-link:hover {
+  text-decoration: underline;
+}
+
+.details-panel {
+  pointer-events: auto;
+}
+
+/* inside grid, let gap control spacing */
+.edit-form-grid input,
+.edit-form-grid select,
+.edit-form-grid textarea {
+  margin-bottom: 0;
+}
+
+/* ================= EDIT FORM GRID ================= */
+
+.edit-form-grid {
+  display: grid;
+  .edit-form-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+  gap: 16px 18px;
+  margin-top: 12px;
+  padding: 16px;
+  background: #252525;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+/* Make labels consistent */
+.edit-form-grid label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 4px;
+  display: block;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  padding-top: 18px;
+}
+
+/* Input refinement */
+.edit-form-grid input,
+.edit-form-grid textarea,
+.edit-form-grid select {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #1f1f1f;
+  color: var(--text);
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+/* Focus state */
+.edit-form-grid input:focus,
+.edit-form-grid textarea:focus,
+.edit-form-grid select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+/* Textarea full width */
+.edit-form-grid textarea {
+  grid-column: 1 / -1;
+  min-height: 80px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+}

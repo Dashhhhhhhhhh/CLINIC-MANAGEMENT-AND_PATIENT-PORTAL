@@ -11,6 +11,7 @@ const { Hematology } = require('../hematology/hematology.model');
 const { Urinalysis } = require('../urinalysis/urinalysis.model');
 const { Ultrasound } = require('../ultrasound/ultrasound.model');
 const { Xray } = require('../xray/xray.model');
+const { Op } = require('sequelize');
 
 async function createResultService(
   patient_id,
@@ -42,13 +43,15 @@ async function createResultService(
     return { success: false, message: 'Test type not found.' };
   }
 
-  if (!billing_item_id || !isValidUUID(billing_item_id)) {
-    return { success: false, message: 'Invalid or missing billing_item_id' };
-  }
+  if (billing_item_id) {
+    if (!isValidUUID(billing_item_id)) {
+      return { success: false, message: 'Invalid billing_item_id' };
+    }
 
-  const existingBilling = await BillingItem.findByPk(billing_item_id);
-  if (!existingBilling) {
-    return { success: false, message: 'Billing item not found.' };
+    const existingBilling = await BillingItem.findByPk(billing_item_id);
+    if (!existingBilling) {
+      return { success: false, message: 'Billing item not found.' };
+    }
   }
 
   if (result_data === undefined || result_data === null) {
@@ -78,7 +81,7 @@ async function createResultService(
     patient_id,
     created_by,
     test_type_id,
-    billing_item_id,
+    billing_item_id: billing_item_id || null,
     result_data,
     status,
   });
@@ -205,9 +208,9 @@ async function getResultByIdService(result_id) {
     },
   };
 
-  const testTypeNameLower = testTypeName?.toLowerCase();
+  const testTypeNameLower = testTypeName?.toLowerCase().replace('-', '');
 
-  const handler = handlers[testTypeName];
+  const handler = handlers[testTypeNameLower];
 
   const testRecord = handler ? await handler() : null;
 
@@ -352,10 +355,276 @@ async function toggleResultDeleteService(result_id, updated_by) {
   };
 }
 
+async function findLatestResultsService(patient_id, is_deleted) {
+  const whereClause = { is_deleted: false };
+
+  if (is_deleted !== undefined) {
+    if (is_deleted === 'true' || is_deleted === true) {
+      whereClause.is_deleted = true;
+    } else if (is_deleted === 'false' || is_deleted === false) {
+      whereClause.is_deleted = false;
+    } else {
+      return {
+        success: false,
+        message: 'Invalid `is_deleted` value. Must be true or false.',
+      };
+    }
+  }
+
+  const result = await Result.findAll({
+    where: { patient_id: patient_id, ...whereClause },
+    limit: 5,
+    order: [['created_at', 'DESC']],
+    attributes: ['result_id', 'status', 'created_at', 'updated_at'],
+    include: [
+      {
+        model: Patient,
+        as: 'patient',
+        attributes: ['patient_id', 'first_name', 'last_name'],
+      },
+      {
+        model: TestTypes,
+        as: 'TestType',
+        attributes: ['test_type_id', 'test_type_name'],
+      },
+    ],
+  });
+
+  return {
+    success: true,
+    count: result.length,
+    data: result.map(results => results.get({ plain: true })),
+  };
+}
+
+async function getPatientResultService({ patient_id, from, to, page = 1, limit = 20, sortOrder }) {
+  const safeLimit = Math.min(Number(limit) || 20, 50);
+  const safePage = Math.max(Number(page) || 1, 1);
+  const offset = (safePage - 1) * safeLimit;
+
+  const order = String(sortOrder || 'DESC').toUpperCase();
+  const VALID_SORT_ORDERS = ['ASC', 'DESC'];
+  const safeOrder = VALID_SORT_ORDERS.includes(order) ? order : 'DESC';
+
+  if (!isValidUUID(patient_id)) return { success: false, message: 'Invalid patient ID.' };
+
+  const whereClause = {
+    patient_id,
+    is_deleted: false,
+  };
+
+  if (from && to) {
+    const fromDate = new Date(from);
+    fromDate.setHours(0, 0, 0, 0);
+
+    const toDate = new Date(to);
+    toDate.setHours(23, 59, 59, 999);
+
+    whereClause.created_at = { [Op.between]: [fromDate, toDate] };
+  } else if (from) {
+    const fromDate = new Date(from);
+    fromDate.setHours(0, 0, 0, 0);
+    whereClause.created_at = { [Op.gte]: fromDate };
+  } else if (to) {
+    const toDate = new Date(to);
+    toDate.setHours(23, 59, 59, 999);
+    whereClause.created_at = { [Op.lte]: toDate };
+  }
+
+  const { rows, count } = await Result.findAndCountAll({
+    where: whereClause,
+    order: [['created_at', safeOrder]],
+    limit: safeLimit,
+    offset,
+    distinct: true,
+    include: [
+      {
+        model: TestTypes,
+        as: 'TestType',
+        attributes: ['test_type_id', 'test_type_name'],
+      },
+      {
+        model: Patient,
+        as: 'patient',
+        attributes: ['patient_id', 'first_name', 'last_name'],
+      },
+    ],
+  });
+
+  const total = count;
+  const totalPages = Math.ceil(total / safeLimit);
+
+  const hasPrevPage = safePage > 1;
+  const hasNextPage = safePage < totalPages;
+
+  return {
+    success: true,
+    meta: {
+      total,
+      page: safePage,
+      limit: safeLimit,
+      totalPages,
+      hasPrevPage,
+      hasNextPage,
+    },
+    results: rows.map(r => r.get({ plain: true })),
+  };
+}
+
+async function getWorklistResultService({ status, test_type_id, page, limit }) {
+  const safeLimit = Math.min(Number(limit) || 20, 50);
+  const safePage = Math.max(Number(page) || 1, 1);
+  const offset = (safePage - 1) * safeLimit;
+
+  const allowedStatus = ['Pending', 'Reviewed', 'Approved', 'Completed'];
+  const whereClause = { is_deleted: false };
+
+  if (status) {
+    if (allowedStatus.includes(status)) {
+      whereClause.status = status;
+    } else {
+      return { success: false, message: 'Invalid status' };
+    }
+  } else {
+    whereClause.status = 'Pending';
+  }
+
+  if (test_type_id) {
+    whereClause.test_type_id = test_type_id;
+  }
+
+  const { rows, count } = await Result.findAndCountAll({
+    where: whereClause,
+    limit: safeLimit,
+    order: [['created_at', 'DESC']],
+    offset,
+    distinct: true,
+    attributes: ['result_id', 'status', 'created_at', 'patient_id', 'test_type_id'],
+    include: [
+      {
+        model: Patient,
+        as: 'patient',
+        attributes: ['patient_id', 'first_name', 'last_name'],
+      },
+      {
+        model: TestTypes,
+        as: 'TestType',
+        attributes: ['test_type_id', 'test_type_name'],
+      },
+    ],
+  });
+
+  const total = count;
+  const totalPages = Math.max(1, Math.ceil(total / safeLimit));
+
+  const hasPrevPage = safePage > 1 && totalPages > 0;
+  const hasNextPage = safePage < totalPages;
+
+  return {
+    success: true,
+    meta: {
+      total,
+      page: safePage,
+      limit: safeLimit,
+      totalPages,
+      hasPrevPage,
+      hasNextPage,
+    },
+    results: rows.map(r => r.get({ plain: true })),
+  };
+}
+
+async function getResultsListService({
+  page = 1,
+  limit = 10,
+  search = '',
+  test_type_id,
+  is_deleted,
+  sortBy = 'created_at',
+  sortOrder = 'desc',
+}) {
+  const safeLimit = Math.min(Number(limit) || 10, 20);
+  const safePage = Math.max(Number(page) || 1, 1);
+  const offset = (safePage - 1) * safeLimit;
+
+  const VALID_SORT_ORDERS = ['ASC', 'DESC'];
+  const order = String(sortOrder || 'DESC').toUpperCase();
+  const safeOrder = VALID_SORT_ORDERS.includes(order) ? order : 'DESC';
+
+  const allowedStatus = ['Pending', 'Reviewed', 'Approved', 'Completed'];
+  const whereClause = {};
+
+  if (is_deleted !== undefined) {
+    if (typeof is_deleted === 'boolean') {
+      whereClause.is_deleted = is_deleted;
+    } else {
+      const deletedStr = String(is_deleted).toLowerCase();
+      whereClause.is_deleted = deletedStr === 'true';
+    }
+  }
+
+  if (test_type_id) {
+    whereClause.test_type_id = test_type_id;
+  }
+
+  if (search) {
+    whereClause[Op.or] = [
+      { '$patient.first_name$': { [Op.iLike]: `%${search}%` } },
+      { '$patient.last_name$': { [Op.iLike]: `%${search}%` } },
+      { '$TestType.test_type_name$': { [Op.iLike]: `%${search}%` } },
+    ];
+  }
+
+  const allowedSortFields = ['created_at', 'status'];
+
+  const sortField = allowedSortFields.includes(sortBy) ? sortBy : 'created_at';
+
+  const { rows, count } = await Result.findAndCountAll({
+    where: whereClause,
+    limit: safeLimit,
+    offset,
+    order: [[sortField, safeOrder]],
+    distinct: true,
+    attributes: ['result_id', 'status', 'created_at', 'patient_id', 'test_type_id'],
+    include: [
+      {
+        model: Patient,
+        as: 'patient',
+        attributes: ['patient_id', 'first_name', 'last_name'],
+      },
+      {
+        model: TestTypes,
+        as: 'TestType',
+        attributes: ['test_type_id', 'test_type_name'],
+      },
+    ],
+  });
+
+  const total = count;
+  const totalPages = Math.max(1, Math.ceil(total / safeLimit));
+
+  return {
+    success: true,
+    meta: {
+      total,
+      page: safePage,
+      limit: safeLimit,
+      totalPages,
+      hasPrevPage: safePage > 1,
+      hasNextPage: safePage < totalPages,
+    },
+    results: rows.map(r => r.get({ plain: true })),
+  };
+}
+
 module.exports = {
   createResultService,
   getAllResultService,
   getResultByIdService,
   updateResultService,
   toggleResultDeleteService,
+  findLatestResultsService,
+  getPatientResultService,
+  getWorklistResultService,
+  getResultsListService,
 };

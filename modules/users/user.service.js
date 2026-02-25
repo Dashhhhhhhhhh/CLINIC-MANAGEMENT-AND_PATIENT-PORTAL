@@ -60,7 +60,7 @@ async function registerAuthService(email, username, password, gender, role_id) {
   return {
     success: true,
     message: 'User registered successfully',
-    user: {
+    data: {
       id: user.id,
       email: user.email,
       username: user.username,
@@ -100,7 +100,7 @@ async function loginAuthService(username, password) {
   return {
     success: true,
     message: 'Login successful',
-    user: {
+    data: {
       id: user.id,
       email: user.email,
       username: user.username,
@@ -111,14 +111,51 @@ async function loginAuthService(username, password) {
   };
 }
 
-async function getAllUsersService(active, role_id) {
+async function getAllUsersService({
+  page = 1,
+  limit = 10,
+  search = '',
+  active,
+  role_id,
+  sortBy = 'created_at',
+  sortOrder = 'desc',
+} = {}) {
+  const safeLimit = Math.min(Number(limit) || 10, 20);
+  const safePage = Math.max(Number(page) || 1, 1);
+  const offset = (safePage - 1) * safeLimit;
+
+  const VALID_SORT_ORDERS = ['ASC', 'DESC'];
+  const order = String(sortOrder || 'DESC').toUpperCase();
+  const safeOrder = VALID_SORT_ORDERS.includes(order) ? order : 'DESC';
+
   const whereClause = {};
 
-  if (active !== undefined) whereClause.active = active;
-  if (role_id !== undefined) whereClause.role_id = role_id;
+  if (active !== undefined) {
+    const activeStr = String(active).toLowerCase();
+    if (activeStr === 'true') whereClause.active = true;
+    else if (activeStr === 'false') whereClause.active = false;
+  }
 
-  const result = await User.findAll({
+  if (role_id !== undefined) {
+    whereClause.role_id = role_id;
+  }
+
+  if (search) {
+    whereClause[Op.or] = [
+      { username: { [Op.iLike]: `%${search}%` } },
+      { email: { [Op.iLike]: `%${search}%` } },
+    ];
+  }
+
+  const allowedSortFields = ['created_at', 'username', 'email', 'active'];
+  const sortField = allowedSortFields.includes(sortBy) ? sortBy : 'created_at';
+
+  const { rows, count } = await User.findAndCountAll({
     where: whereClause,
+    limit: safeLimit,
+    offset,
+    order: [[sortField, safeOrder]],
+    distinct: true,
     attributes: ['id', 'email', 'username', 'gender', 'active', 'created_at'],
     include: [
       {
@@ -129,10 +166,23 @@ async function getAllUsersService(active, role_id) {
     ],
   });
 
+  const total = count;
+  const totalPages = Math.max(1, Math.ceil(total / safeLimit));
+
+  const hasPrevPage = safePage > 1 && totalPages > 0;
+  const hasNextPage = safePage < totalPages;
+
   return {
     success: true,
-    count: result.length,
-    users: result.map(user => user.get({ plain: true })),
+    meta: {
+      total,
+      page: safePage,
+      limit: safeLimit,
+      totalPages,
+      hasPrevPage,
+      hasNextPage,
+    },
+    data: rows.map(r => r.get({ plain: true })),
   };
 }
 
@@ -153,7 +203,7 @@ async function getUsersByIdService(id) {
 
   return {
     success: true,
-    user: cleanUser,
+    data: cleanUser,
   };
 }
 
@@ -217,7 +267,7 @@ async function updateUsersService(id, updateField) {
   return {
     success: true,
     message: 'User updated Succesfully',
-    updateUser: refreshedUser.get({ plain: true }),
+    data: refreshedUser.get({ plain: true }),
   };
 }
 
@@ -235,7 +285,7 @@ async function toggleUserStatusService(id, active) {
     };
   }
 
-  user.active = !user.active;
+  user.active = active;
   await user.save();
 
   const cleanUser = user.get({ plain: true });
@@ -244,7 +294,7 @@ async function toggleUserStatusService(id, active) {
   return {
     success: true,
     message: user.active ? 'User activated successfully.' : 'User deactivated successfully.',
-    user: cleanUser,
+    data: cleanUser,
   };
 }
 
@@ -253,7 +303,7 @@ async function getAvailableRoleService() {
 
   return {
     success: true,
-    role: avaibleRole,
+    roles: avaibleRole,
   };
 }
 

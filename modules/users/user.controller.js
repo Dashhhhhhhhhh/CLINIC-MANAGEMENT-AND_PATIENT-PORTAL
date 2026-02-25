@@ -37,7 +37,27 @@ async function registerAuthController(req, res) {
 
 async function getAllUsersController(req, res) {
   try {
-    const result = await getAllUsersService();
+    const { page, limit, search, active, role_id, sortBy, sortOrder } = req.query;
+
+    let parsedActive;
+    const activeNorm = typeof active === 'string' ? active.toLowerCase() : active;
+
+    if (activeNorm === 'true' || activeNorm === '1') parsedActive = true;
+    else if (activeNorm === 'false' || activeNorm === '0') parsedActive = false;
+    else parsedActive = undefined;
+
+    const roleIdNorm = typeof role_id === 'string' && role_id.trim() === '' ? undefined : role_id;
+    const searchNorm = typeof search === 'string' ? search.trim() : '';
+
+    const result = await getAllUsersService({
+      page,
+      limit,
+      search: searchNorm,
+      active: parsedActive,
+      role_id: roleIdNorm,
+      sortBy,
+      sortOrder,
+    });
 
     return res.status(200).json(result);
   } catch (error) {
@@ -96,6 +116,8 @@ async function toggleUserStatusController(req, res) {
   try {
     const { id } = req.params;
     const { active } = req.body;
+
+    if (typeof active === 'string') active = active.toLowerCase() === 'true';
 
     const result = await toggleUserStatusService(id, active);
 

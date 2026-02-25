@@ -1,0 +1,73 @@
+.create-result-modal__title {
+  margin: 0 0 12px 0;
+}
+
+.create-result-modal__patient-card {
+  margin-top: 8px;
+}
+
+.create-result-modal__search-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  margin-bottom: 10px;
+}
+
+.create-result-modal__search-row .create-result-modal__search {
+  flex: 1;
+}
+
+.create-result-modal__results {
+  max-height: 320px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.create-result-modal__results thead th {
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+  z-index: 1;
+}
+
+/* Selected row highlight */
+.table-ui__row--selected {
+  background: rgba(59, 130, 246, 0.14);
+}
+
+/* Hover keeps feeling clickable even when selected */
+.table-ui__row--selected:hover {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+/* Make the patient name look like a link if you keep the <span> */
+.patient-table__name-link {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.patient-table__name-link:hover {
+  text-decoration: underline;
+}
+
+/* Small helper text (optional) */
+.create-result-modal__hint {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 6px 0 10px;
+}
+
+/* Make the hematology card and grid take the full modal width */
+.hematology-form {
+  width: 100%;
+}
+
+.hematology-form .edit-form-grid {
+  width: 100%;
+}
+
+/* Ensure grid children can shrink properly (prevents weird overflow sizing) */
+.hematology-form .form-field {
+  min-width: 0;
+}
